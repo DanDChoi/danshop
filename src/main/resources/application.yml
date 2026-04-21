@@ -1,0 +1,21 @@
+spring:
+  application:
+    name: danshop
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+    database: postgresql
+    hibernate:
+      ddl-auto: create
+    show-sql: true
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    hikari:
+      maximum-pool-size: 4
+    username: danuser
+    url: jdbc:postgresql://localhost:5432/danshop
+    password: dan
+
+
