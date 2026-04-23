@@ -18,8 +18,15 @@ public class UserService {
     private final JwtProvider jwtProvider;
 
     public void userSignup(SignupRequest signupRequest) {
+        //중복체크
+        if (userRepository.findByUserId(signupRequest.getUserId()).isPresent()) {
+            throw new RuntimeException("이미 존재하는 아이디입니다");
+        }
+        //비밀번호 암호화
         String encodedPassword = passwordEncoder.encode(signupRequest.getPassword());
+        //Entity 생성
         User newUser = User.from(signupRequest, encodedPassword);
+        //저장
         userRepository.save(newUser);
     }
 
