@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.user.entity;
 
 import com.dan.danshop.domain.user.dto.SignupRequest;
+import com.dan.danshop.global.common.BaseEntity;
 import jakarta.persistence.*;
 import lombok.*;
 
@@ -10,7 +11,7 @@ import lombok.*;
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
 @Table(name = "users")
-public class User {
+public class User extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long userNo;
