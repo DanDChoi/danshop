@@ -13,11 +13,11 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "product")
+@Table(name = "products")
 public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long productNo;
+    private Long id;
     private String productName;
     private BigDecimal price;
     private String category;
