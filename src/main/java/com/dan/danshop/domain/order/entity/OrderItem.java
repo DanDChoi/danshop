@@ -26,8 +26,13 @@ public class OrderItem {
     @JoinColumn(name = "product_id")
     private Product product;
 
-    //TODO
-//    private static OrderItem from(OrderItemRequest orderItemRequest, Order order, Product product) {
-//
-//    }
+
+    public static OrderItem from(Order order, Product product, int quantity) {
+        return OrderItem.builder()
+                .price(product.getPrice())
+                .quantity(quantity)
+                .product(product)
+                .order(order)
+                .build();
+    }
 }
