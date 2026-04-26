@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.order.entity;
 
+import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.global.common.BaseEntity;
 import jakarta.persistence.*;
@@ -17,6 +18,8 @@ public class Order extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Enumerated(EnumType.STRING)
+    private OrderStatus status;
     private BigDecimal payAmount;
     private String postNo;
     private String baseAddr;
@@ -24,4 +27,15 @@ public class Order extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
+
+    public static Order from(CreateRequest createRequest, User user) {
+        return Order.builder()
+                .status(OrderStatus.PENDING)
+                .payAmount(createRequest.getPayAmount())
+                .postNo(createRequest.getPostNo())
+                .baseAddr(createRequest.getBaseAddr())
+                .detailAddr(createRequest.getDetailAddr())
+                .user(user)
+                .build();
+    }
 }
