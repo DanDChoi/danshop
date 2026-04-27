@@ -23,6 +23,8 @@ public class Product extends BaseEntity {
     private String category;
     private int stock;
     private String description;
+    @Version
+    private Long version;
 
     public static Product from(AddRequest addRequest) {
         return Product.builder()
@@ -40,6 +42,14 @@ public class Product extends BaseEntity {
         this.category = updateRequest.getCategory();
         this.stock = updateRequest.getStock();
         this.description = updateRequest.getDescription();
+    }
+
+    //재고 차감
+    public void decreaseStock(int quantity) {
+        if (this.stock - quantity < 0) {
+            throw new RuntimeException("재고 없음");
+        }
+        this.stock -= quantity;
     }
 
 

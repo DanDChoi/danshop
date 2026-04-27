@@ -24,7 +24,7 @@ public class ProductService {
     }
 
     public void updateProduct(Long productNo, UpdateRequest updateRequest) {
-        Product product = productRepository.findByProductNo(productNo)
+        Product product = productRepository.findById(productNo)
                 .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다"));
         product.update(updateRequest);
         productRepository.save(product);
@@ -32,7 +32,7 @@ public class ProductService {
     }
 
     public ProductResponse findByProductNo(Long productNo) {
-        Product product = productRepository.findByProductNo(productNo)
+        Product product = productRepository.findById(productNo)
                 .orElseThrow(() -> new RuntimeException(("상품이 존재하지 않습니다")));
         return ProductResponse.from(product);
     }
