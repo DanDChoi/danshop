@@ -38,4 +38,11 @@ public class Order extends BaseEntity {
                 .user(user)
                 .build();
     }
+
+    public void cancel () {
+        if (this.status != OrderStatus.PENDING) {
+            throw new RuntimeException("취소 가능한 주문이 아닙니다");
+        }
+        this.status = OrderStatus.CANCELLED;
+    }
 }

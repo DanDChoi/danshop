@@ -51,4 +51,18 @@ public class OrderService {
         orderRepository.save(newOrder);
         orderItemRepository.saveAll(itemRequests);
     }
+
+    public void cancelOrder(Long orderId) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("유저 없음"));
+
+        Order cancelOrder = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("없는 주문"));
+
+        if (cancelOrder.getUser().getId() != curruntUser.getId()) {
+            throw new RuntimeException("본인의 주문만 취소 가능합니다");
+        }
+        //TODO
+//        orderRepository.cancelOrder();
+
+    }
 }
