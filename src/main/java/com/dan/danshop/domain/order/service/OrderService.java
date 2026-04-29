@@ -52,17 +52,28 @@ public class OrderService {
         orderItemRepository.saveAll(itemRequests);
     }
 
+    @Transactional
     public void cancelOrder(Long orderId) {
+        //현재 로그인유저 조회
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("유저 없음"));
 
+        //취소요청 주문 조회
         Order cancelOrder = orderRepository.findById(orderId).orElseThrow(() -> new RuntimeException("없는 주문"));
 
-        if (cancelOrder.getUser().getId() != curruntUser.getId()) {
+        //로그인 유저의 주문인지 확인
+        if (!cancelOrder.getUser().getId().equals(curruntUser.getId())) {
             throw new RuntimeException("본인의 주문만 취소 가능합니다");
         }
-        //TODO
-//        orderRepository.cancelOrder();
 
+        //취소
+        cancelOrder.cancel();
+
+        //재고복구
+        List<OrderItem> orderItems = orderItemRepository.findByOrder(cancelOrder);
+        for (OrderItem orderItem : orderItems) {
+            Product orderdProduct = productRepository.findByIdWithLock(orderItem.getProduct().getId()).orElseThrow(() -> new RuntimeException("상품 없음"));
+            orderdProduct.increaseStock(orderItem.getQuantity());
+        }
     }
 }
