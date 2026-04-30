@@ -28,7 +28,7 @@ public class OrderService {
     private final ProductRepository productRepository;
 
     @Transactional
-    public void createOrder(CreateRequest createRequest) {
+    public Long createOrder(CreateRequest createRequest) {
 
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new RuntimeException("유저 없음"));
@@ -50,6 +50,8 @@ public class OrderService {
 
         orderRepository.save(newOrder);
         orderItemRepository.saveAll(itemRequests);
+
+        return newOrder.getId();
     }
 
     @Transactional
