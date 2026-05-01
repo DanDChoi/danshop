@@ -41,7 +41,7 @@ public class ProductController {
     public ResponseEntity<Page<ProductResponse>> findProductList(@RequestParam(required = false, defaultValue = "0") int page,
                                                                  @RequestParam(required = false, defaultValue = "10") int size,
                                                                  @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok( productService.findProductList(page, size, keyword));
+        return ResponseEntity.ok(productService.findProductList(page, size, keyword));
     }
 
 

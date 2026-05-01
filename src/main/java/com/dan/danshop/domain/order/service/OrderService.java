@@ -2,6 +2,7 @@ package com.dan.danshop.domain.order.service;
 
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
+import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderItem;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
@@ -11,6 +12,8 @@ import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -77,5 +80,13 @@ public class OrderService {
             Product orderdProduct = productRepository.findByIdWithLock(orderItem.getProduct().getId()).orElseThrow(() -> new RuntimeException("상품 없음"));
             orderdProduct.increaseStock(orderItem.getQuantity());
         }
+    }
+
+    public Page<OrderResponse> findOrderList(int page, int size) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+
+        return orderRepository.findAll(pageRequest)
+                .map(OrderResponse::from);
+
     }
 }
