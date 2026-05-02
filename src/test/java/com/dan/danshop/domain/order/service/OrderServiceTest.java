@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.order.service;
 
+import com.dan.danshop.DataSourceProxyConfig;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.entity.Order;
@@ -8,9 +9,12 @@ import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
+import net.ttddyy.dsproxy.QueryCount;
+import net.ttddyy.dsproxy.QueryCountHolder;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -23,6 +27,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @SpringBootTest
+@Import(DataSourceProxyConfig.class)
 public class OrderServiceTest {
 
     @Autowired
@@ -132,5 +137,47 @@ public class OrderServiceTest {
         System.out.println("주문 후 재고: "+stock);
         System.out.println("주문 상태: " + cancelledOrder.getStatus());
         System.out.println("복구된 재고: " + updatedProduct.getStock());
+    }
+
+    @Test
+    void N플러스1_재현_테스트() {
+        //테스트용 상품 준비
+        Product product = Product.builder()
+                .productName("테스트상품")
+                .price(BigDecimal.valueOf(10000))
+                .stock(10)
+                .build();
+        productRepository.save(product);
+
+        //유저3 주문3
+        for (int i = 0; i < 3; i++) {
+            User user = User.builder()
+                    .userId("testuser" + i)
+                    .build();
+            userRepository.save(user);
+
+            //주문 생성 호출
+            SecurityContextHolder.getContext().setAuthentication(
+                    new UsernamePasswordAuthenticationToken("testuser"+ i, null, List.of())
+            );
+            CreateRequest request = new CreateRequest(
+                    BigDecimal.valueOf(10000),
+                    "12345",
+                    "서울시 강남구",
+                    "101호",
+                    List.of(new OrderItemRequest(product.getId(), 1))
+            );
+            Long orderId = orderService.createOrder(request);
+        }
+
+        QueryCountHolder.clear();
+
+        orderService.findOrderList(0, 10);
+
+        QueryCount count = QueryCountHolder.getGrandTotal();
+        System.out.println("SELECT: " + count.getSelect());
+        System.out.println("INSERT: " + count.getInsert());
+        System.out.println("UPDATE: " + count.getUpdate());
+        System.out.println("전체: " + count.getTotal());
     }
 }

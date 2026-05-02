@@ -10,6 +10,7 @@ spring:
     hibernate:
       ddl-auto: create
     show-sql: true
+    open-in-view: false
   datasource:
     driver-class-name: org.postgresql.Driver
     hikari:
