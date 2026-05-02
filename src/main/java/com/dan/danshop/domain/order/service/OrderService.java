@@ -82,6 +82,7 @@ public class OrderService {
         }
     }
 
+    @Transactional(readOnly = true)
     public Page<OrderResponse> findOrderList(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
 

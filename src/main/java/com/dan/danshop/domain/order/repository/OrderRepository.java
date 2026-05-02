@@ -7,6 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    Page<Order> findByOrderNameContaining(String keyword, Pageable pageable);
+//    Page<Order> findByOrderNameContaining(String keyword, Pageable pageable);
 
 }

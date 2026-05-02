@@ -31,8 +31,8 @@ public class OrderController {
 
     @GetMapping("/orders")
     public ResponseEntity<Page<OrderResponse>> findOrderList (@RequestParam(required = false, defaultValue = "0") int page,
-                                                              @RequestParam(required = false, defaultValue = "10") int size,
-                                                              @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(orderService.findOrderList(page, size, keyword));
+                                                              @RequestParam(required = false, defaultValue = "10") int size
+                                                              ) {
+        return ResponseEntity.ok(orderService.findOrderList(page, size));
     }
 }
