@@ -86,7 +86,7 @@ public class OrderService {
     public Page<OrderResponse> findOrderList(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
 
-        return orderRepository.findAll(pageRequest)
+        return orderRepository.findAllWithUser(pageRequest)
                 .map(OrderResponse::from);
 
     }
