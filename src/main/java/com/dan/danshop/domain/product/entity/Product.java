@@ -13,7 +13,9 @@ import java.math.BigDecimal;
 @Builder
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
 @NoArgsConstructor(access = AccessLevel.PROTECTED)
-@Table(name = "products")
+@Table(name = "products", indexes = {
+        @Index(name = "idx_product_name", columnList = "product_name")
+})
 public class Product extends BaseEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
