@@ -5,10 +5,13 @@ import com.dan.danshop.domain.product.dto.ProductResponse;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
+import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
+
+import static com.dan.danshop.global.exception.ErrorCode.PRODUCT_NOT_FOUND;
 
 @Service
 @RequiredArgsConstructor
@@ -25,7 +28,7 @@ public class ProductService {
 
     public void updateProduct(Long productNo, UpdateRequest updateRequest) {
         Product product = productRepository.findById(productNo)
-                .orElseThrow(() -> new RuntimeException("상품이 존재하지 않습니다"));
+                .orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
         product.update(updateRequest);
         productRepository.save(product);
 
@@ -33,7 +36,7 @@ public class ProductService {
 
     public ProductResponse findByProductNo(Long productNo) {
         Product product = productRepository.findById(productNo)
-                .orElseThrow(() -> new RuntimeException(("상품이 존재하지 않습니다")));
+                .orElseThrow(() -> new BusinessException((PRODUCT_NOT_FOUND)));
         return ProductResponse.from(product);
     }
 
