@@ -18,6 +18,10 @@ spring:
     username: danuser
     url: jdbc:postgresql://localhost:5432/danshop
     password: dan
+  data:
+    redis:
+      host: localhost
+      port: 6379
 jwt:
   secret: danshop-secret-key-must-be-at-least-32-characters
   expiration: 86400000
