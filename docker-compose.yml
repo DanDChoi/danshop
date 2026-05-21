@@ -1,0 +1,27 @@
+services:
+  db:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: danshop
+      POSTGRES_USER: danshop
+      POSTGRES_PASSWORD: danshop1234
+    ports:
+      - "5432:5432"
+
+  redis:
+    image: redis:7
+    ports:
+      - "6379:6379"
+
+  app:
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://db:5432/danshop
+      SPRING_DATASOURCE_USERNAME: danshop
+      SPRING_DATASOURCE_PASSWORD: danshop1234
+      SPRING_DATA_REDIS_HOST: redis
+    depends_on:
+      - db
+      - redis
