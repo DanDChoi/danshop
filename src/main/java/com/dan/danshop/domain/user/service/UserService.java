@@ -39,7 +39,7 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
         if (passwordEncoder.matches(loginRequest.getPassword(), existsUser.getPassword())) {
-            String token = jwtProvider.generateToken(existsUser.getUserId());
+            String token = jwtProvider.generateToken(existsUser.getUserId(), existsUser.getRole().name());
             return token;
         } else {
             throw new BusinessException(PASSWORD_NOT_MATCH);

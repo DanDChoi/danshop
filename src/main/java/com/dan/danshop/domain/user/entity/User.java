@@ -20,6 +20,8 @@ public class User extends BaseEntity {
     private String password;
     private String name;
 
+    @Enumerated(EnumType.STRING)
+    private Role role;
 
     public static User from(SignupRequest request, String encodedPassword) {
         return User.builder()
@@ -27,6 +29,7 @@ public class User extends BaseEntity {
                 .name(request.getName())
                 .email(request.getEmail())
                 .password(encodedPassword)
+                .role(Role.ROLE_USER)
                 .build();
     }
 }
