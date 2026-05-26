@@ -26,28 +26,39 @@ public class JwtProvider {
         key = Keys.hmacShaKeyFor(secretKey.getBytes());
     }
     //토큰 생성
-    public String generateToken(String userId) {
+    public String generateToken(String userId, String role) {
 
-        String jwt = Jwts.builder()
+        return Jwts.builder()
                 .subject(userId)
+                .claim("role", role)
                 .expiration(new Date(System.currentTimeMillis() + expiration))
                 .signWith(key)
                 .compact();
-
-        return jwt;
     }
 
     //토큰에서 userId 추출
     public String getUserId(String token) {
-        String id = "";
         try {
-            id = Jwts.parser()
+            return Jwts.parser()
                     .verifyWith(key)
                     .build()
                     .parseSignedClaims(token)
                     .getPayload()
                     .getSubject();
-            return id;
+        } catch (JwtException e) {
+            return e.toString();
+        }
+    }
+
+    //토큰에서 role 추출
+    public String getRole(String token) {
+        try {
+            return Jwts.parser()
+                    .verifyWith(key)
+                    .build()
+                    .parseSignedClaims(token)
+                    .getPayload()
+                    .get("role", String.class);
         } catch (JwtException e) {
             return e.toString();
         }
