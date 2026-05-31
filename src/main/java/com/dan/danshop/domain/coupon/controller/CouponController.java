@@ -28,5 +28,6 @@ public class CouponController {
                 .expiresAt(createRequest.getExpiresAt())
                 .build();
         couponService.createCoupon(coupon);
+        return ResponseEntity.ok().build();
     }
 }
