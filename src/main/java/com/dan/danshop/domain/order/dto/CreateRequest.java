@@ -11,6 +11,7 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class CreateRequest {
+    private Long couponId;
     private BigDecimal payAmount;
     private String postNo;
     private String baseAddr;

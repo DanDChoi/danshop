@@ -1,5 +1,9 @@
 package com.dan.danshop.domain.order.service;
 
+import com.dan.danshop.domain.coupon.entity.Coupon;
+import com.dan.danshop.domain.coupon.entity.DiscountType;
+import com.dan.danshop.domain.coupon.entity.UserCoupon;
+import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.dto.OrderResponse;
@@ -19,6 +23,9 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -32,6 +39,7 @@ public class OrderService {
     private final OrderItemRepository orderItemRepository;
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
+    private final UserCouponRepository userCouponRepository;
 
     @Transactional
     public Long createOrder(CreateRequest createRequest) {
@@ -39,7 +47,30 @@ public class OrderService {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
-        Order newOrder = Order.from(createRequest, curruntUser);
+        // 쿠폰 적용
+        BigDecimal payAmount = createRequest.getPayAmount();
+        if (createRequest.getCouponId() != null) {
+            UserCoupon userCoupon = userCouponRepository
+                    .findByUserIdAndCouponId(curruntUser.getId(), createRequest.getCouponId())
+                    .orElseThrow(() -> new BusinessException(COUPON_NOT_OWNED));
+
+            if (userCoupon.isUsed()) throw new BusinessException(COUPON_ALREADY_USED);
+
+            Coupon coupon = userCoupon.getCoupon();
+            if (coupon.getExpiresAt().isBefore(LocalDateTime.now())) throw new BusinessException(COUPON_EXPIRED);
+            if (payAmount.compareTo(coupon.getMinOrderAmount()) < 0) throw new BusinessException(MIN_ORDER_AMOUNT_NOT_MET);
+
+            if (coupon.getDiscountType() == DiscountType.AMOUNT) {
+                payAmount = payAmount.subtract(coupon.getDiscountValue());
+            } else {
+                BigDecimal discountRate = coupon.getDiscountValue().divide(BigDecimal.valueOf(100));
+                payAmount = payAmount.multiply(BigDecimal.ONE.subtract(discountRate)).setScale(0, RoundingMode.DOWN);
+            }
+
+            userCoupon.use();
+        }
+
+        Order newOrder = Order.from(createRequest, curruntUser, payAmount);
 
 
         List<OrderItem> itemRequests = new ArrayList<>();
