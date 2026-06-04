@@ -23,5 +23,7 @@ public class UserCoupon extends BaseEntity {
     @JoinColumn(name = "coupon_id")
     private Coupon coupon;
 
-
+    public void use() {
+        this.isUsed = true;
+    }
 }

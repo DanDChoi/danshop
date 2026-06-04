@@ -30,10 +30,10 @@ public class Order extends BaseEntity {
     @JoinColumn(name = "user_id")
     private User user;
 
-    public static Order from(CreateRequest createRequest, User user) {
+    public static Order from(CreateRequest createRequest, User user, BigDecimal payAmount) {
         return Order.builder()
                 .status(OrderStatus.PENDING)
-                .payAmount(createRequest.getPayAmount())
+                .payAmount(payAmount)
                 .postNo(createRequest.getPostNo())
                 .baseAddr(createRequest.getBaseAddr())
                 .detailAddr(createRequest.getDetailAddr())
