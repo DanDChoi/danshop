@@ -10,6 +10,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -21,6 +22,7 @@ public class ProductController {
 
     @PostMapping(value = "/product")
     @Operation(summary = "상품 등록")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> addProduct(@RequestBody AddRequest addRequest) {
         productService.addProduct(addRequest);
 
@@ -29,6 +31,7 @@ public class ProductController {
 
     @PatchMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 수정")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> updateProduct(@PathVariable Long productNo, @RequestBody UpdateRequest updateRequest) {
 
         productService.updateProduct(productNo, updateRequest);
@@ -54,6 +57,7 @@ public class ProductController {
 
     @DeleteMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 삭제")
+    @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<?> deleteProduct(@PathVariable Long productNo) {
         productService.deleteProduct(productNo);
         return ResponseEntity.status(HttpStatus.OK).body("상품 삭제 완료");
