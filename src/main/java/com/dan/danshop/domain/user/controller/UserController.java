@@ -2,6 +2,7 @@ package com.dan.danshop.domain.user.controller;
 
 import com.dan.danshop.domain.user.dto.LoginRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
+import com.dan.danshop.domain.user.dto.TokenResponse;
 import com.dan.danshop.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -29,8 +30,7 @@ public class UserController {
 
     @PostMapping(value = "/login")
     @Operation(summary = "로그인")
-    public ResponseEntity<?> login(@RequestBody LoginRequest loginRequest) {
-        String token = userService.login(loginRequest);
-        return ResponseEntity.status(HttpStatus.OK).body(token);
+    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {
+        return ResponseEntity.ok(userService.login(loginRequest));
     }
 }
