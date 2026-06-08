@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.user.service;
 
 import com.dan.danshop.domain.user.dto.LoginRequest;
+import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
 import com.dan.danshop.domain.user.dto.TokenResponse;
 import com.dan.danshop.domain.user.entity.User;
@@ -60,5 +61,32 @@ public class UserService {
         );
 
         return new TokenResponse(accessToken, refreshToken);
+    }
+
+    public String refresh(RefreshRequest refreshRequest) {
+        String refreshToken = refreshRequest.getRefreshToken();
+
+        // 1. JWT 서명 및 만료 검증
+        if (!jwtProvider.validateToken(refreshToken)) {
+            throw new BusinessException(INVALID_REFRESH_TOKEN);
+        }
+
+        // 2. 토큰에서 userId 추출
+        String userId = jwtProvider.getUserId(refreshToken);
+
+        // 3. Redis에 저장된 Refresh Token과 일치하는지 검증
+        String stored = (String) redisTemplate.opsForValue().get(REFRESH_TOKEN_PREFIX + userId);
+        if (stored == null) {
+            throw new BusinessException(REFRESH_TOKEN_NOT_FOUND);
+        }
+        if (!stored.equals(refreshToken)) {
+            throw new BusinessException(INVALID_REFRESH_TOKEN);
+        }
+
+        // 4. 유저 조회 후 새 Access Token 발급
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+
+        return jwtProvider.generateAccessToken(user.getUserId(), user.getRole().name());
     }
 }

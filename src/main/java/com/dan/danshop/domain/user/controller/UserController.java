@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.user.controller;
 
 import com.dan.danshop.domain.user.dto.LoginRequest;
+import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
 import com.dan.danshop.domain.user.dto.TokenResponse;
 import com.dan.danshop.domain.user.service.UserService;
@@ -32,5 +33,11 @@ public class UserController {
     @Operation(summary = "로그인")
     public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok(userService.login(loginRequest));
+    }
+
+    @PostMapping(value = "/refresh")
+    @Operation(summary = "Access Token 재발급")
+    public ResponseEntity<String> refresh(@RequestBody RefreshRequest refreshRequest) {
+        return ResponseEntity.ok(userService.refresh(refreshRequest));
     }
 }
