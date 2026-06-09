@@ -11,6 +11,7 @@ import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -88,5 +89,10 @@ public class UserService {
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
         return jwtProvider.generateAccessToken(user.getUserId(), user.getRole().name());
+    }
+
+    public void logout() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
     }
 }
