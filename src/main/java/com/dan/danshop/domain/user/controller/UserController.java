@@ -40,4 +40,11 @@ public class UserController {
     public ResponseEntity<String> refresh(@RequestBody RefreshRequest refreshRequest) {
         return ResponseEntity.ok(userService.refresh(refreshRequest));
     }
+
+    @PostMapping(value = "/logout")
+    @Operation(summary = "로그아웃")
+    public ResponseEntity<String> logout() {
+        userService.logout();
+        return ResponseEntity.ok("로그아웃 완료");
+    }
 }
