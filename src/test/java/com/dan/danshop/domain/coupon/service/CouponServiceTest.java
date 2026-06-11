@@ -76,4 +76,118 @@ public class CouponServiceTest {
         System.out.println("DB 저장된 쿠폰명: " + saved.getName());
         System.out.println("Redis 초기 수량: " + redisValue);
     }
+
+    // ───────────────────────────────────────────
+    // 2단계: 정상 발급 / 중복 발급 방지 / 수량 소진
+    // ───────────────────────────────────────────
+
+    @Test
+    void 쿠폰_정상_발급시_UserCoupon이_저장되고_Redis_수량이_감소한다() {
+        // given
+        User user = userRepository.save(User.builder()
+                .userId("testuser")
+                .email("test@test.com")
+                .password("password")
+                .name("테스트유저")
+                .role(Role.ROLE_USER)
+                .build());
+
+        Coupon coupon = Coupon.builder()
+                .name("5000원 할인 쿠폰")
+                .discountType(DiscountType.AMOUNT)
+                .discountValue(BigDecimal.valueOf(5000))
+                .minOrderAmount(BigDecimal.valueOf(30000))
+                .totalQuantity(10)
+                .remainQuantity(10)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+
+        // when
+        couponService.issueCoupon(coupon.getId(), user.getUserId());
+
+        // then - UserCoupon DB 저장 확인
+        boolean exists = userCouponRepository.existsByUserIdAndCouponId(user.getId(), coupon.getId());
+        assertThat(exists).isTrue();
+
+        // then - Redis 수량 감소 확인 (10 → 9)
+        Object redisValue = redisTemplate.opsForValue().get(COUPON_KEY + coupon.getId());
+        assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(9);
+
+        System.out.println("Redis 남은 수량: " + redisValue);
+    }
+
+    @Test
+    void 동일_유저가_같은_쿠폰을_두번_발급받으면_예외가_발생한다() {
+        // given
+        User user = userRepository.save(User.builder()
+                .userId("testuser")
+                .email("test@test.com")
+                .password("password")
+                .name("테스트유저")
+                .role(Role.ROLE_USER)
+                .build());
+
+        Coupon coupon = Coupon.builder()
+                .name("중복방지 쿠폰")
+                .discountType(DiscountType.AMOUNT)
+                .discountValue(BigDecimal.valueOf(3000))
+                .minOrderAmount(BigDecimal.valueOf(20000))
+                .totalQuantity(10)
+                .remainQuantity(10)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+
+        // when - 첫 번째 발급
+        couponService.issueCoupon(coupon.getId(), user.getUserId());
+
+        // then - 두 번째 발급 시 예외 발생
+        assertThatThrownBy(() -> couponService.issueCoupon(coupon.getId(), user.getUserId()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("이미 발급받은 쿠폰입니다.");
+
+        System.out.println("중복 발급 방지 확인 완료");
+    }
+
+    @Test
+    void 수량이_소진된_쿠폰은_발급되지_않는다() {
+        // given - 수량 1개짜리 쿠폰
+        User user1 = userRepository.save(User.builder()
+                .userId("user1")
+                .email("user1@test.com")
+                .password("password")
+                .name("유저1")
+                .role(Role.ROLE_USER)
+                .build());
+
+        User user2 = userRepository.save(User.builder()
+                .userId("user2")
+                .email("user2@test.com")
+                .password("password")
+                .name("유저2")
+                .role(Role.ROLE_USER)
+                .build());
+
+        Coupon coupon = Coupon.builder()
+                .name("1개짜리 쿠폰")
+                .discountType(DiscountType.RATE)
+                .discountValue(BigDecimal.valueOf(10))
+                .minOrderAmount(BigDecimal.ZERO)
+                .totalQuantity(1)
+                .remainQuantity(1)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+
+        // when - user1 발급 성공
+        couponService.issueCoupon(coupon.getId(), user1.getUserId());
+
+        // then - user2 발급 시 수량 소진 예외
+        assertThatThrownBy(() -> couponService.issueCoupon(coupon.getId(), user2.getUserId()))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("선착순 마감된 쿠폰입니다.");
+
+        System.out.println("user1 발급 성공, user2 수량 소진으로 실패 확인 완료");
+    }
 }
