@@ -17,6 +17,9 @@ import org.springframework.data.redis.core.RedisTemplate;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -189,5 +192,79 @@ public class CouponServiceTest {
                 .hasMessageContaining("선착순 마감된 쿠폰입니다.");
 
         System.out.println("user1 발급 성공, user2 수량 소진으로 실패 확인 완료");
+    }
+
+    // ───────────────────────────────────────────
+    // 3단계: 동시성 테스트 - 100명이 동시에 요청해도 50개만 발급
+    // ───────────────────────────────────────────
+
+    @Test
+    void 동시에_100명이_요청해도_쿠폰은_50개만_발급된다() throws InterruptedException {
+        // given - 수량 50개짜리 쿠폰
+        int totalQuantity = 50;
+        int threadCount = 100;
+
+        Coupon coupon = Coupon.builder()
+                .name("선착순 50개 쿠폰")
+                .discountType(DiscountType.AMOUNT)
+                .discountValue(BigDecimal.valueOf(1000))
+                .minOrderAmount(BigDecimal.ZERO)
+                .totalQuantity(totalQuantity)
+                .remainQuantity(totalQuantity)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+
+        // 유저 100명 사전 생성
+        List<User> users = new ArrayList<>();
+        for (int i = 0; i < threadCount; i++) {
+            users.add(userRepository.save(User.builder()
+                    .userId("user" + i)
+                    .email("user" + i + "@test.com")
+                    .password("password")
+                    .name("유저" + i)
+                    .role(Role.ROLE_USER)
+                    .build()));
+        }
+
+        // when - 100명 동시 요청
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        Long couponId = coupon.getId();
+
+        for (int i = 0; i < threadCount; i++) {
+            String userId = users.get(i).getUserId();
+            executor.submit(() -> {
+                try {
+                    couponService.issueCoupon(couponId, userId);
+                    successCount.incrementAndGet();
+                } catch (BusinessException e) {
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        // then - 정확히 50건만 성공, 50건은 실패
+        assertThat(successCount.get()).isEqualTo(totalQuantity);
+        assertThat(failCount.get()).isEqualTo(threadCount - totalQuantity);
+
+        // then - DB에도 정확히 50건만 저장
+        long issuedCount = userCouponRepository.count();
+        assertThat(issuedCount).isEqualTo(totalQuantity);
+
+        // then - Redis 수량은 0
+        Object redisValue = redisTemplate.opsForValue().get(COUPON_KEY + couponId);
+        assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(0);
+
+        System.out.println("성공: " + successCount.get() + "건, 실패: " + failCount.get() + "건");
+        System.out.println("DB 발급 수량: " + issuedCount);
+        System.out.println("Redis 남은 수량: " + redisValue);
     }
 }
