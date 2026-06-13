@@ -69,6 +69,7 @@ public class OrderServiceTest {
                         new UsernamePasswordAuthenticationToken("testuser", null, List.of())
                 );
                 CreateRequest request = new CreateRequest(
+                        null,
                         BigDecimal.valueOf(10000),
                         "12345",
                         "서울시 강남구",
@@ -117,6 +118,7 @@ public class OrderServiceTest {
                 new UsernamePasswordAuthenticationToken("testuser", null, List.of())
         );
         CreateRequest request = new CreateRequest(
+                null,
                 BigDecimal.valueOf(10000),
                 "12345",
                 "서울시 강남구",
@@ -161,6 +163,7 @@ public class OrderServiceTest {
                     new UsernamePasswordAuthenticationToken("testuser"+ i, null, List.of())
             );
             CreateRequest request = new CreateRequest(
+                    null,
                     BigDecimal.valueOf(10000),
                     "12345",
                     "서울시 강남구",
