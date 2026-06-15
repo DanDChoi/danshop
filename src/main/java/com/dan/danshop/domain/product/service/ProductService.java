@@ -11,6 +11,7 @@ import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 
 import static com.dan.danshop.global.exception.ErrorCode.PRODUCT_NOT_FOUND;
@@ -46,16 +47,9 @@ public class ProductService {
 
     @Cacheable("products")
     public Page<ProductResponse> findProductList(int page, int size, String keyword) {
-        PageRequest pageRequest = PageRequest.of(page, size);
-
-        if (keyword != null && !keyword.isBlank()) {
-            return productRepository.findByProductNameContaining(keyword, pageRequest)
-                    .map(ProductResponse::from);
-        } else {
-            return productRepository.findAll(pageRequest)
-                    .map(ProductResponse::from);
-        }
-
+        PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").descending());
+        return productRepository.searchProducts(keyword, pageRequest)
+                .map(ProductResponse::from);
     }
 
     @CacheEvict(value = "products", allEntries = true)
