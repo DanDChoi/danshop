@@ -2,6 +2,7 @@ package com.dan.danshop.domain.product.controller;
 
 import com.dan.danshop.domain.product.dto.AddRequest;
 import com.dan.danshop.domain.product.dto.ProductResponse;
+import com.dan.danshop.domain.product.dto.ProductSearchCondition;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
 import com.dan.danshop.domain.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +13,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.math.BigDecimal;
 
 @RestController
 @RequiredArgsConstructor
@@ -48,10 +51,15 @@ public class ProductController {
 
     @GetMapping("/product")
     @Operation(summary = "상품 목록 조회")
-    public ResponseEntity<Page<ProductResponse>> findProductList(@RequestParam(required = false, defaultValue = "0") int page,
-                                                                 @RequestParam(required = false, defaultValue = "10") int size,
-                                                                 @RequestParam(required = false) String keyword) {
-        return ResponseEntity.ok(productService.findProductList(page, size, keyword));
+    public ResponseEntity<Page<ProductResponse>> findProductList(
+            @RequestParam(required = false, defaultValue = "0") int page,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
+        ProductSearchCondition condition = new ProductSearchCondition(keyword, category, minPrice, maxPrice);
+        return ResponseEntity.ok(productService.findProductList(page, size, condition));
     }
 
 

@@ -2,6 +2,7 @@ package com.dan.danshop.domain.product.service;
 
 import com.dan.danshop.domain.product.dto.AddRequest;
 import com.dan.danshop.domain.product.dto.ProductResponse;
+import com.dan.danshop.domain.product.dto.ProductSearchCondition;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
@@ -45,10 +46,10 @@ public class ProductService {
         return ProductResponse.from(product);
     }
 
-    @Cacheable("products")
-    public Page<ProductResponse> findProductList(int page, int size, String keyword) {
+    @Cacheable(value = "products", key = "#page + '_' + #size + '_' + #condition.toString()")
+    public Page<ProductResponse> findProductList(int page, int size, ProductSearchCondition condition) {
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("id").descending());
-        return productRepository.searchProducts(keyword, pageRequest)
+        return productRepository.searchProducts(condition, pageRequest)
                 .map(ProductResponse::from);
     }
 
