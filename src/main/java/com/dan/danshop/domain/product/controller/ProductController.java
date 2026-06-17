@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.product.controller;
 
 import com.dan.danshop.domain.product.dto.AddRequest;
+import com.dan.danshop.domain.product.dto.ProductCursorResponse;
 import com.dan.danshop.domain.product.dto.ProductResponse;
 import com.dan.danshop.domain.product.dto.ProductSearchCondition;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
@@ -50,16 +51,30 @@ public class ProductController {
     }
 
     @GetMapping("/product")
-    @Operation(summary = "상품 목록 조회")
+    @Operation(summary = "상품 목록 조회 (offset 페이지네이션, 동적 정렬)")
     public ResponseEntity<Page<ProductResponse>> findProductList(
             @RequestParam(required = false, defaultValue = "0") int page,
             @RequestParam(required = false, defaultValue = "10") int size,
             @RequestParam(required = false) String keyword,
             @RequestParam(required = false) String category,
             @RequestParam(required = false) BigDecimal minPrice,
-            @RequestParam(required = false) BigDecimal maxPrice) {
-        ProductSearchCondition condition = new ProductSearchCondition(keyword, category, minPrice, maxPrice);
+            @RequestParam(required = false) BigDecimal maxPrice,
+            @RequestParam(required = false, defaultValue = "latest") String sort) {
+        ProductSearchCondition condition = new ProductSearchCondition(keyword, category, minPrice, maxPrice, sort);
         return ResponseEntity.ok(productService.findProductList(page, size, condition));
+    }
+
+    @GetMapping("/product/scroll")
+    @Operation(summary = "상품 목록 조회 (no-offset 커서 페이지네이션)")
+    public ResponseEntity<ProductCursorResponse> findProductListNoOffset(
+            @RequestParam(required = false) Long lastId,
+            @RequestParam(required = false, defaultValue = "10") int size,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(required = false) String category,
+            @RequestParam(required = false) BigDecimal minPrice,
+            @RequestParam(required = false) BigDecimal maxPrice) {
+        ProductSearchCondition condition = new ProductSearchCondition(keyword, category, minPrice, maxPrice, null);
+        return ResponseEntity.ok(productService.findProductListNoOffset(condition, lastId, size));
     }
 
 

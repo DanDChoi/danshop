@@ -16,4 +16,5 @@ public class ProductSearchCondition {
     private String category;
     private BigDecimal minPrice;
     private BigDecimal maxPrice;
+    private String sort; // latest(default) | price_asc | price_desc
 }
