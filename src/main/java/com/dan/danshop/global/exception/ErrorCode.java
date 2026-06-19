@@ -19,7 +19,8 @@ public enum ErrorCode {
     COUPON_NOT_OWNED("보유하지 않은 쿠폰입니다."),
     MIN_ORDER_AMOUNT_NOT_MET("최소 주문금액을 충족하지 않습니다."),
     INVALID_REFRESH_TOKEN("유효하지 않은 Refresh Token입니다."),
-    REFRESH_TOKEN_NOT_FOUND("Refresh Token이 존재하지 않습니다.");
+    REFRESH_TOKEN_NOT_FOUND("Refresh Token이 존재하지 않습니다."),
+    CART_ITEM_NOT_FOUND("장바구니에 존재하지 않는 상품입니다.");
 
     private final String message;
 
