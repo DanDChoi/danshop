@@ -15,9 +15,9 @@ spring:
     driver-class-name: org.postgresql.Driver
     hikari:
       maximum-pool-size: 4
-    username: danuser
-    url: jdbc:postgresql://localhost:5432/danshop
-    password: dan
+    url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://${PGHOST:localhost}:${PGPORT:5432}/${PGDATABASE:danshop}}
+    username: ${SPRING_DATASOURCE_USERNAME:${PGUSER:danuser}}
+    password: ${SPRING_DATASOURCE_PASSWORD:${PGPASSWORD:dan}}
   data:
     redis:
       host: ${REDIS_HOST:localhost}
