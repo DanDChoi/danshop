@@ -12,6 +12,7 @@ import java.util.List;
 @AllArgsConstructor
 public class CreateRequest {
     private Long couponId;
+    private Long usePoints; // nullable
     private BigDecimal payAmount;
     private String postNo;
     private String baseAddr;

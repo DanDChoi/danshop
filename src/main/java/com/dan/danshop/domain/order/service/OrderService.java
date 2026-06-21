@@ -11,6 +11,7 @@ import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderItem;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.point.service.PointService;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.domain.user.entity.User;
@@ -40,6 +41,7 @@ public class OrderService {
     private final UserRepository userRepository;
     private final ProductRepository productRepository;
     private final UserCouponRepository userCouponRepository;
+    private final PointService pointService;
 
     @Transactional
     public Long createOrder(CreateRequest createRequest) {
@@ -70,16 +72,14 @@ public class OrderService {
             userCoupon.use();
         }
 
-        Order newOrder = Order.from(createRequest, curruntUser, payAmount);
+        // 포인트 사용 (잔액 차감, payAmount 감소)
+        payAmount = pointService.applyPoints(curruntUser, createRequest.getUsePoints(), payAmount);
 
+        Order newOrder = Order.from(createRequest, curruntUser, payAmount);
 
         List<OrderItem> itemRequests = new ArrayList<>();
         for (OrderItemRequest itemRequest : createRequest.getItems()) {
-            //product 조회
-//            Product product = productRepository.findById(itemRequest.getProductId()).orElseThrow(() -> new RuntimeException("상품 없음"));
-            //product 조회 (비관적 락)
             Product product = productRepository.findByIdWithLock(itemRequest.getProductId()).orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
-            //재고 차감
             product.decreaseStock(itemRequest.getQuantity());
             OrderItem orderItem = OrderItem.from(newOrder, product, itemRequest.getQuantity());
             itemRequests.add(orderItem);
@@ -87,6 +87,12 @@ public class OrderService {
 
         orderRepository.save(newOrder);
         orderItemRepository.saveAll(itemRequests);
+
+        // 포인트 이력 저장 (사용 / 적립)
+        if (createRequest.getUsePoints() != null && createRequest.getUsePoints() > 0) {
+            pointService.recordUse(curruntUser, newOrder.getId(), createRequest.getUsePoints());
+        }
+        pointService.earnPoints(curruntUser, newOrder.getId(), payAmount);
 
         return newOrder.getId();
     }
@@ -114,6 +120,9 @@ public class OrderService {
             Product orderdProduct = productRepository.findByIdWithLock(orderItem.getProduct().getId()).orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
             orderdProduct.increaseStock(orderItem.getQuantity());
         }
+
+        //포인트 취소
+        pointService.cancelOrderPoints(curruntUser, orderId);
     }
 
     @Transactional(readOnly = true)
