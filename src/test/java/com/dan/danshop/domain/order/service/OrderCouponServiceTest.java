@@ -96,6 +96,7 @@ public class OrderCouponServiceTest {
         // when - 50000원 주문에 5000원 쿠폰 적용
         CreateRequest request = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -127,6 +128,7 @@ public class OrderCouponServiceTest {
         // when - 50000원 주문에 10% 할인 적용
         CreateRequest request = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -158,6 +160,7 @@ public class OrderCouponServiceTest {
         // when - 20000원 주문 시도 (최소 금액 미달)
         CreateRequest request = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(20000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -188,6 +191,7 @@ public class OrderCouponServiceTest {
 
         CreateRequest firstRequest = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -197,6 +201,7 @@ public class OrderCouponServiceTest {
         // when - 동일 쿠폰으로 두 번째 주문 시도
         CreateRequest secondRequest = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -228,6 +233,7 @@ public class OrderCouponServiceTest {
         // when - 만료된 쿠폰으로 주문 시도
         CreateRequest request = new CreateRequest(
                 coupon.getId(),
+                null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
