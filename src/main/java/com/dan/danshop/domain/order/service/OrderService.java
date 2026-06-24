@@ -47,7 +47,10 @@ public class OrderService {
     public Long createOrder(CreateRequest createRequest) {
 
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
-        User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+        // 포인트 사용 시 동시 차감 방지를 위해 비관적 락으로 유저 조회
+        User curruntUser = (createRequest.getUsePoints() != null && createRequest.getUsePoints() > 0)
+                ? userRepository.findByUserIdWithLock(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND))
+                : userRepository.findByUserId(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
         // 쿠폰 적용
         BigDecimal payAmount = createRequest.getPayAmount();
