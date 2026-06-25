@@ -28,6 +28,12 @@ public class Product extends BaseEntity {
     @Version
     private Long version;
 
+    private Double avgRating;
+
+    public void updateAvgRating(Double avg) {
+        this.avgRating = avg;
+    }
+
     public static Product from(AddRequest addRequest) {
         return Product.builder()
                 .productName(addRequest.getProductName())
