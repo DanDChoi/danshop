@@ -21,7 +21,12 @@ public enum ErrorCode {
     INVALID_REFRESH_TOKEN("유효하지 않은 Refresh Token입니다."),
     REFRESH_TOKEN_NOT_FOUND("Refresh Token이 존재하지 않습니다."),
     CART_ITEM_NOT_FOUND("장바구니에 존재하지 않는 상품입니다."),
-    INSUFFICIENT_POINTS("포인트가 부족합니다.");
+    INSUFFICIENT_POINTS("포인트가 부족합니다."),
+    REVIEW_NOT_FOUND("리뷰를 찾을 수 없습니다."),
+    DUPLICATE_REVIEW("이미 작성한 리뷰입니다."),
+    NOT_PURCHASED_PRODUCT("구매한 상품만 리뷰를 작성할 수 있습니다."),
+    NOT_REVIEW_OWNER("본인의 리뷰만 수정/삭제할 수 있습니다."),
+    INVALID_RATING("평점은 1~5 사이여야 합니다.");
 
     private final String message;
 
