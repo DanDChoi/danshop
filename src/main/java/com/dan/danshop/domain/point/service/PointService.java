@@ -1,5 +1,7 @@
 package com.dan.danshop.domain.point.service;
 
+import com.dan.danshop.domain.notification.dto.NotificationEvent;
+import com.dan.danshop.domain.notification.service.NotificationService;
 import com.dan.danshop.domain.point.dto.PointHistoryResponse;
 import com.dan.danshop.domain.point.entity.PointHistory;
 import com.dan.danshop.domain.point.entity.PointType;
@@ -22,6 +24,7 @@ public class PointService {
 
     private final PointHistoryRepository pointHistoryRepository;
     private final UserRepository userRepository;
+    private final NotificationService notificationService;
 
     private static final BigDecimal EARN_RATE = new BigDecimal("0.01"); // 결제금액의 1% 적립
 
@@ -64,6 +67,12 @@ public class PointService {
                 .user(user).amount(amount).type(PointType.EARN)
                 .description("주문 #" + orderId + " 포인트 적립")
                 .orderId(orderId).build());
+
+        notificationService.send(user.getUserId(), new NotificationEvent(
+                "POINT_EARNED",
+                amount + " 포인트가 적립되었습니다.",
+                amount
+        ));
     }
 
     // Called within cancelOrder transaction: reverses EARN and USE histories for the order

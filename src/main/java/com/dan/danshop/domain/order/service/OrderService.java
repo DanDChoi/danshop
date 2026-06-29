@@ -11,6 +11,8 @@ import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderItem;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.notification.dto.NotificationEvent;
+import com.dan.danshop.domain.notification.service.NotificationService;
 import com.dan.danshop.domain.point.service.PointService;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
@@ -42,6 +44,7 @@ public class OrderService {
     private final ProductRepository productRepository;
     private final UserCouponRepository userCouponRepository;
     private final PointService pointService;
+    private final NotificationService notificationService;
 
     @Transactional
     public Long createOrder(CreateRequest createRequest) {
@@ -97,6 +100,12 @@ public class OrderService {
         }
         pointService.earnPoints(curruntUser, newOrder.getId(), payAmount);
 
+        notificationService.send(userId, new NotificationEvent(
+                "ORDER_CREATED",
+                "주문 #" + newOrder.getId() + "이 접수되었습니다.",
+                newOrder.getId()
+        ));
+
         return newOrder.getId();
     }
 
@@ -126,6 +135,12 @@ public class OrderService {
 
         //포인트 취소
         pointService.cancelOrderPoints(curruntUser, orderId);
+
+        notificationService.send(userId, new NotificationEvent(
+                "ORDER_CANCELLED",
+                "주문 #" + orderId + "이 취소되었습니다.",
+                orderId
+        ));
     }
 
     @Transactional(readOnly = true)
