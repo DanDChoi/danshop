@@ -8,6 +8,7 @@ import com.dan.danshop.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -22,7 +23,7 @@ public class UserController {
 
     @PostMapping(value = "/signup")
     @Operation(summary = "회원가입")
-    public ResponseEntity<?> signUp(@RequestBody SignupRequest signupRequest) {
+    public ResponseEntity<?> signUp(@Valid @RequestBody SignupRequest signupRequest) {
 
         userService.userSignup(signupRequest);
 
@@ -31,7 +32,7 @@ public class UserController {
 
     @PostMapping(value = "/login")
     @Operation(summary = "로그인")
-    public ResponseEntity<TokenResponse> login(@RequestBody LoginRequest loginRequest) {
+    public ResponseEntity<TokenResponse> login(@Valid @RequestBody LoginRequest loginRequest) {
         return ResponseEntity.ok(userService.login(loginRequest));
     }
 

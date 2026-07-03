@@ -6,6 +6,7 @@ import com.dan.danshop.domain.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class OrderController {
 
     @PostMapping("/orders")
     @Operation(summary = "주문 생성")
-    public ResponseEntity<?> createOrder(@RequestBody CreateRequest createRequest) {
+    public ResponseEntity<?> createOrder(@Valid @RequestBody CreateRequest createRequest) {
 
         orderService.createOrder(createRequest);
 

@@ -9,6 +9,7 @@ import com.dan.danshop.domain.product.service.ProductService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,7 +28,7 @@ public class ProductController {
     @PostMapping(value = "/product")
     @Operation(summary = "상품 등록")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> addProduct(@RequestBody AddRequest addRequest) {
+    public ResponseEntity<?> addProduct(@Valid @RequestBody AddRequest addRequest) {
         productService.addProduct(addRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("상품 등록 완료");
@@ -36,7 +37,7 @@ public class ProductController {
     @PatchMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 수정")
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<?> updateProduct(@PathVariable Long productNo, @RequestBody UpdateRequest updateRequest) {
+    public ResponseEntity<?> updateProduct(@PathVariable Long productNo, @Valid @RequestBody UpdateRequest updateRequest) {
 
         productService.updateProduct(productNo, updateRequest);
 
