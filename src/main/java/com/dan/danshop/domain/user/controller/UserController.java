@@ -4,6 +4,7 @@ import com.dan.danshop.domain.user.dto.LoginRequest;
 import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
 import com.dan.danshop.domain.user.dto.TokenResponse;
+import com.dan.danshop.domain.user.dto.UserProfileResponse;
 import com.dan.danshop.domain.user.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -47,5 +48,11 @@ public class UserController {
     public ResponseEntity<String> logout() {
         userService.logout();
         return ResponseEntity.ok("로그아웃 완료");
+    }
+
+    @GetMapping(value = "/me")
+    @Operation(summary = "내 프로필 조회")
+    public ResponseEntity<UserProfileResponse> getProfile() {
+        return ResponseEntity.ok(userService.getProfile());
     }
 }

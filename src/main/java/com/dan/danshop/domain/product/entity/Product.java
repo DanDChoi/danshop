@@ -3,10 +3,13 @@ package com.dan.danshop.domain.product.entity;
 import com.dan.danshop.domain.product.dto.AddRequest;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
 import com.dan.danshop.global.common.BaseEntity;
+import com.dan.danshop.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+
+import static com.dan.danshop.global.exception.ErrorCode.OUT_OF_STOCK;
 
 @Entity
 @Getter
@@ -54,8 +57,8 @@ public class Product extends BaseEntity {
 
     //재고 차감
     public void decreaseStock(int quantity) {
-        if (this.stock - quantity < 0) {
-            throw new RuntimeException("재고 없음");
+        if (this.stock < quantity) {
+            throw new BusinessException(OUT_OF_STOCK);
         }
         this.stock -= quantity;
     }

@@ -5,6 +5,7 @@ import com.dan.danshop.domain.coupon.entity.DiscountType;
 import com.dan.danshop.domain.coupon.entity.UserCoupon;
 import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.entity.Order;
@@ -146,9 +147,23 @@ public class OrderService {
     @Transactional(readOnly = true)
     public Page<OrderResponse> findOrderList(int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
+        return orderRepository.findAllWithUser(pageRequest).map(OrderResponse::from);
+    }
 
-        return orderRepository.findAllWithUser(pageRequest)
-                .map(OrderResponse::from);
+    @Transactional(readOnly = true)
+    public OrderDetailResponse findOrder(Long orderId) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+
+        if (!order.getUser().getId().equals(currentUser.getId())) {
+            throw new BusinessException(NOT_ORDERED_USER);
+        }
+
+        List<OrderItem> items = orderItemRepository.findByOrder(order);
+        return OrderDetailResponse.from(order, items);
     }
 }

@@ -1,6 +1,8 @@
 package com.dan.danshop.domain.coupon.controller;
 
 import com.dan.danshop.domain.coupon.dto.CouponCreateRequest;
+import com.dan.danshop.domain.coupon.dto.CouponResponse;
+import com.dan.danshop.domain.coupon.dto.MyCouponResponse;
 import com.dan.danshop.domain.coupon.entity.Coupon;
 import com.dan.danshop.domain.coupon.service.CouponService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -12,6 +14,8 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.Authentication;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequiredArgsConstructor
@@ -42,5 +46,17 @@ public class CouponController {
     public ResponseEntity<?> issueCoupon(@PathVariable Long couponId, Authentication authentication) {
         couponService.issueCoupon(couponId, authentication.getName());
         return ResponseEntity.ok("쿠폰 발급 완료");
+    }
+
+    @GetMapping("/coupons")
+    @Operation(summary = "발급 가능한 쿠폰 목록 조회")
+    public ResponseEntity<List<CouponResponse>> getAvailableCoupons() {
+        return ResponseEntity.ok(couponService.getAvailableCoupons());
+    }
+
+    @GetMapping("/coupons/my")
+    @Operation(summary = "내 쿠폰 목록 조회")
+    public ResponseEntity<List<MyCouponResponse>> getMyCoupons() {
+        return ResponseEntity.ok(couponService.getMyCoupons());
     }
 }
