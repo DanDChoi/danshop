@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 public interface CouponRepository extends JpaRepository<Coupon, Long> {
@@ -14,4 +16,6 @@ public interface CouponRepository extends JpaRepository<Coupon, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("SELECT p From Coupon p WHERE p.id = :id")
     Optional<Coupon> findByIdWithLock(@Param("id") Long id);
+
+    List<Coupon> findByRemainQuantityGreaterThanAndExpiresAtAfter(int remainQuantity, LocalDateTime now);
 }

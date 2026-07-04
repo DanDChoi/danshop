@@ -4,6 +4,7 @@ import com.dan.danshop.domain.user.dto.LoginRequest;
 import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
 import com.dan.danshop.domain.user.dto.TokenResponse;
+import com.dan.danshop.domain.user.dto.UserProfileResponse;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
 import com.dan.danshop.global.config.JwtProvider;
@@ -94,5 +95,12 @@ public class UserService {
     public void logout() {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         redisTemplate.delete(REFRESH_TOKEN_PREFIX + userId);
+    }
+
+    public UserProfileResponse getProfile() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+        return UserProfileResponse.from(user);
     }
 }

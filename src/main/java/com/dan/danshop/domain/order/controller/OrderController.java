@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.order.controller;
 
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,11 +36,16 @@ public class OrderController {
         return ResponseEntity.status(HttpStatus.OK).body("주문 취소 완료");
     }
 
+    @GetMapping("/orders/{id}")
+    @Operation(summary = "주문 단건 조회")
+    public ResponseEntity<OrderDetailResponse> findOrder(@PathVariable Long id) {
+        return ResponseEntity.ok(orderService.findOrder(id));
+    }
+
     @GetMapping("/orders")
     @Operation(summary = "주문 목록 조회")
-    public ResponseEntity<Page<OrderResponse>> findOrderList (@RequestParam(required = false, defaultValue = "0") int page,
-                                                              @RequestParam(required = false, defaultValue = "10") int size
-                                                              ) {
+    public ResponseEntity<Page<OrderResponse>> findOrderList(@RequestParam(required = false, defaultValue = "0") int page,
+                                                             @RequestParam(required = false, defaultValue = "10") int size) {
         return ResponseEntity.ok(orderService.findOrderList(page, size));
     }
 }

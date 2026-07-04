@@ -1,5 +1,7 @@
 package com.dan.danshop.domain.coupon.service;
 
+import com.dan.danshop.domain.coupon.dto.CouponResponse;
+import com.dan.danshop.domain.coupon.dto.MyCouponResponse;
 import com.dan.danshop.domain.coupon.entity.Coupon;
 import com.dan.danshop.domain.coupon.entity.UserCoupon;
 import com.dan.danshop.domain.coupon.repository.CouponRepository;
@@ -9,8 +11,12 @@ import com.dan.danshop.domain.user.repository.UserRepository;
 import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.List;
 
 import static com.dan.danshop.global.exception.ErrorCode.*;
 
@@ -58,5 +64,23 @@ public class CouponService {
                 .isUsed(false)
                 .build();
         userCouponRepository.save(userCoupon);
+    }
+
+    public List<CouponResponse> getAvailableCoupons() {
+        return couponRepository
+                .findByRemainQuantityGreaterThanAndExpiresAtAfter(0, LocalDateTime.now())
+                .stream()
+                .map(CouponResponse::from)
+                .toList();
+    }
+
+    public List<MyCouponResponse> getMyCoupons() {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+        return userCouponRepository.findByUserWithCoupon(user)
+                .stream()
+                .map(MyCouponResponse::from)
+                .toList();
     }
 }

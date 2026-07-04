@@ -3,10 +3,13 @@ package com.dan.danshop.domain.order.entity;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.global.common.BaseEntity;
+import com.dan.danshop.global.exception.BusinessException;
 import jakarta.persistence.*;
 import lombok.*;
 
 import java.math.BigDecimal;
+
+import static com.dan.danshop.global.exception.ErrorCode.IMPOSSIBLE_CANCEL_ORDER;
 
 @Entity
 @Getter
@@ -41,9 +44,9 @@ public class Order extends BaseEntity {
                 .build();
     }
 
-    public void cancel () {
+    public void cancel() {
         if (this.status != OrderStatus.PENDING) {
-            throw new RuntimeException("취소 가능한 주문이 아닙니다");
+            throw new BusinessException(IMPOSSIBLE_CANCEL_ORDER);
         }
         this.status = OrderStatus.CANCELLED;
     }
