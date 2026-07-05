@@ -76,7 +76,7 @@ public class CartService {
         if (quantity <= 0) {
             redisTemplate.opsForHash().delete(key, productId.toString());
         } else {
-            redisTemplate.opsForHash().put(key, productId.toString(), quantity);
+            redisTemplate.opsForHash().put(key, productId.toString(), String.valueOf(quantity));
         }
     }
 
