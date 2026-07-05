@@ -9,7 +9,11 @@ import lombok.*;
 
 import java.math.BigDecimal;
 
+import java.util.Set;
+import java.util.Map;
+
 import static com.dan.danshop.global.exception.ErrorCode.IMPOSSIBLE_CANCEL_ORDER;
+import static com.dan.danshop.global.exception.ErrorCode.INVALID_ORDER_STATUS_TRANSITION;
 
 @Entity
 @Getter
@@ -49,5 +53,19 @@ public class Order extends BaseEntity {
             throw new BusinessException(IMPOSSIBLE_CANCEL_ORDER);
         }
         this.status = OrderStatus.CANCELLED;
+    }
+
+    private static final Map<OrderStatus, Set<OrderStatus>> ALLOWED_TRANSITIONS = Map.of(
+            OrderStatus.PENDING, Set.of(OrderStatus.PAID, OrderStatus.CANCELLED),
+            OrderStatus.PAID, Set.of(OrderStatus.SHIPPED, OrderStatus.CANCELLED),
+            OrderStatus.SHIPPED, Set.of(OrderStatus.DELIVERED)
+    );
+
+    public void updateStatus(OrderStatus newStatus) {
+        Set<OrderStatus> allowed = ALLOWED_TRANSITIONS.getOrDefault(this.status, Set.of());
+        if (!allowed.contains(newStatus)) {
+            throw new BusinessException(INVALID_ORDER_STATUS_TRANSITION);
+        }
+        this.status = newStatus;
     }
 }

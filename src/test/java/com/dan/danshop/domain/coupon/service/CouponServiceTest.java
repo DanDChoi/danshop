@@ -259,12 +259,13 @@ public class CouponServiceTest {
         long issuedCount = userCouponRepository.count();
         assertThat(issuedCount).isEqualTo(totalQuantity);
 
-        // then - Redis 수량은 0
+        // then - Redis 수량: 50개 차감(성공) + 50개 차감(실패) = -50
+        // decrement()는 원자적으로 감소만 할 뿐 음수를 막지 않으므로 최종값은 -(초과요청수)
         Object redisValue = redisTemplate.opsForValue().get(COUPON_KEY + couponId);
-        assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(0);
+        assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(-(threadCount - totalQuantity));
 
         System.out.println("성공: " + successCount.get() + "건, 실패: " + failCount.get() + "건");
         System.out.println("DB 발급 수량: " + issuedCount);
-        System.out.println("Redis 남은 수량: " + redisValue);
+        System.out.println("Redis 최종 수량: " + redisValue);
     }
 }

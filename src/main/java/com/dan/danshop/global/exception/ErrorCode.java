@@ -18,6 +18,7 @@ public enum ErrorCode {
     ORDER_NOT_FOUND(HttpStatus.NOT_FOUND, "주문을 찾을 수 없습니다."),
     IMPOSSIBLE_CANCEL_ORDER(HttpStatus.BAD_REQUEST, "취소 가능한 주문이 아닙니다."),
     NOT_ORDERED_USER(HttpStatus.FORBIDDEN, "본인의 주문만 취소 가능합니다."),
+    INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "허용되지 않는 주문 상태 변경입니다."),
 
     // Coupon
     COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "쿠폰을 찾을 수 없습니다."),
