@@ -1,10 +1,14 @@
 package com.dan.danshop.domain.admin.service;
 
 import com.dan.danshop.domain.admin.dto.OrderStatusUpdateRequest;
+import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.entity.Order;
+import com.dan.danshop.domain.order.entity.OrderStatus;
 import com.dan.danshop.domain.order.repository.OrderRepository;
 import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -21,5 +25,11 @@ public class AdminOrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
         order.updateStatus(request.getStatus());
+    }
+
+    @Transactional(readOnly = true)
+    public Page<OrderResponse> findAllOrders(int page, int size, OrderStatus status) {
+        PageRequest pageRequest = PageRequest.of(page, size);
+        return orderRepository.findAllWithUserAndStatus(status, pageRequest).map(OrderResponse::from);
     }
 }

@@ -10,8 +10,10 @@ import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.point.repository.PointHistoryRepository;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
+import com.dan.danshop.domain.review.repository.ReviewRepository;
 import com.dan.danshop.domain.user.entity.Role;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
@@ -41,6 +43,8 @@ public class OrderCouponServiceTest {
     @Autowired private ProductRepository productRepository;
     @Autowired private CouponRepository couponRepository;
     @Autowired private UserCouponRepository userCouponRepository;
+    @Autowired private PointHistoryRepository pointHistoryRepository;
+    @Autowired private ReviewRepository reviewRepository;
 
     // ───────────────────────────────────────────
     // 4단계: 주문 시 쿠폰 적용 검증
@@ -52,8 +56,10 @@ public class OrderCouponServiceTest {
 
     @BeforeEach
     void setUp() {
+        pointHistoryRepository.deleteAll();
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
+        reviewRepository.deleteAll();
         userCouponRepository.deleteAll();
         couponRepository.deleteAll();
         productRepository.deleteAll();

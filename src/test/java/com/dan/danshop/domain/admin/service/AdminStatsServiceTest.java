@@ -7,12 +7,14 @@ import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderStatus;
+import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
 import com.dan.danshop.domain.order.service.OrderService;
 import com.dan.danshop.domain.point.repository.PointHistoryRepository;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
+import com.dan.danshop.domain.review.repository.ReviewRepository;
 import com.dan.danshop.domain.user.entity.Role;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
@@ -40,6 +42,8 @@ public class AdminStatsServiceTest {
     @Autowired private PointHistoryRepository pointHistoryRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private UserCouponRepository userCouponRepository;
 
     private User user;
     private Product productA;
@@ -47,9 +51,11 @@ public class AdminStatsServiceTest {
 
     @BeforeEach
     void setUp() {
+        pointHistoryRepository.deleteAll();
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
-        pointHistoryRepository.deleteAll();
+        reviewRepository.deleteAll();
+        userCouponRepository.deleteAll();
         productRepository.deleteAll();
         userRepository.deleteAll();
 

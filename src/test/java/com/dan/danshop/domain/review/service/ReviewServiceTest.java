@@ -3,6 +3,7 @@ package com.dan.danshop.domain.review.service;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.entity.OrderStatus;
+import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
 import com.dan.danshop.domain.order.service.OrderService;
@@ -42,6 +43,7 @@ public class ReviewServiceTest {
     @Autowired private PointHistoryRepository pointHistoryRepository;
     @Autowired private ProductRepository productRepository;
     @Autowired private UserRepository userRepository;
+    @Autowired private UserCouponRepository userCouponRepository;
 
     private User user;
     private Product product;
@@ -49,9 +51,10 @@ public class ReviewServiceTest {
     @BeforeEach
     void setUp() {
         reviewRepository.deleteAll();
+        pointHistoryRepository.deleteAll();
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
-        pointHistoryRepository.deleteAll();
+        userCouponRepository.deleteAll();
         productRepository.deleteAll();
         userRepository.deleteAll();
 
@@ -95,7 +98,7 @@ public class ReviewServiceTest {
         Review review = reviewRepository.findById(reviewId).orElseThrow();
         assertThat(review.getRating()).isEqualTo(5);
         assertThat(review.getContent()).isEqualTo("최고의 상품입니다!");
-        assertThat(review.getUser().getUserId()).isEqualTo(user.getUserId());
+        assertThat(review.getUser().getId()).isEqualTo(user.getId());
 
         // 상품 평균 평점 업데이트 확인
         Product updated = productRepository.findById(product.getId()).orElseThrow();
