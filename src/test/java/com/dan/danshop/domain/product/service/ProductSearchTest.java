@@ -1,10 +1,14 @@
 package com.dan.danshop.domain.product.service;
 
+import com.dan.danshop.domain.order.repository.OrderItemRepository;
+import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.point.repository.PointHistoryRepository;
 import com.dan.danshop.domain.product.dto.ProductCursorResponse;
 import com.dan.danshop.domain.product.dto.ProductResponse;
 import com.dan.danshop.domain.product.dto.ProductSearchCondition;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
+import com.dan.danshop.domain.review.repository.ReviewRepository;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,11 +28,18 @@ public class ProductSearchTest {
     @Autowired private ProductService productService;
     @Autowired private ProductRepository productRepository;
     @Autowired private CacheManager cacheManager;
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private PointHistoryRepository pointHistoryRepository;
 
     @BeforeEach
     void setUp() {
-        // 캐시 초기화 (테스트 간 캐시 오염 방지)
         cacheManager.getCache("products").clear();
+        pointHistoryRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        reviewRepository.deleteAll();
         productRepository.deleteAll();
 
         productRepository.saveAll(List.of(

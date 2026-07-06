@@ -146,8 +146,9 @@ public class OrderService {
 
     @Transactional(readOnly = true)
     public Page<OrderResponse> findOrderList(int page, int size) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         PageRequest pageRequest = PageRequest.of(page, size);
-        return orderRepository.findAllWithUser(pageRequest).map(OrderResponse::from);
+        return orderRepository.findByUserIdString(userId, pageRequest).map(OrderResponse::from);
     }
 
     @Transactional(readOnly = true)

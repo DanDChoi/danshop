@@ -4,19 +4,22 @@ import com.dan.danshop.DataSourceProxyConfig;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.entity.Order;
+import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
+import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.point.repository.PointHistoryRepository;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.domain.user.repository.UserRepository;
 import net.ttddyy.dsproxy.QueryCount;
 import net.ttddyy.dsproxy.QueryCountHolder;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.context.SecurityContext;
 import org.springframework.security.core.context.SecurityContextHolder;
 
 import java.math.BigDecimal;
@@ -30,14 +33,24 @@ import java.util.concurrent.atomic.AtomicInteger;
 @Import(DataSourceProxyConfig.class)
 public class OrderServiceTest {
 
-    @Autowired
-    private OrderService orderService;
-    @Autowired
-    private ProductRepository productRepository;
-    @Autowired
-    private UserRepository userRepository;
-    @Autowired
-    private OrderRepository orderRepository;
+    @Autowired private OrderService orderService;
+    @Autowired private ProductRepository productRepository;
+    @Autowired private UserRepository userRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private PointHistoryRepository pointHistoryRepository;
+    @Autowired private UserCouponRepository userCouponRepository;
+
+    @BeforeEach
+    void setUp() {
+        pointHistoryRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        userCouponRepository.deleteAll();
+        productRepository.deleteAll();
+        userRepository.deleteAll();
+        SecurityContextHolder.clearContext();
+    }
 
 
     @Test

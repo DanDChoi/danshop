@@ -2,8 +2,12 @@ package com.dan.danshop.domain.cart.service;
 
 import com.dan.danshop.domain.cart.dto.CartItem;
 import com.dan.danshop.domain.cart.dto.CartResponse;
+import com.dan.danshop.domain.order.repository.OrderItemRepository;
+import com.dan.danshop.domain.order.repository.OrderRepository;
+import com.dan.danshop.domain.point.repository.PointHistoryRepository;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
+import com.dan.danshop.domain.review.repository.ReviewRepository;
 import com.dan.danshop.global.exception.BusinessException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,6 +26,10 @@ public class CartServiceTest {
     @Autowired private CartService cartService;
     @Autowired private ProductRepository productRepository;
     @Autowired private RedisTemplate<String, Object> redisTemplate;
+    @Autowired private ReviewRepository reviewRepository;
+    @Autowired private OrderItemRepository orderItemRepository;
+    @Autowired private OrderRepository orderRepository;
+    @Autowired private PointHistoryRepository pointHistoryRepository;
 
     private static final String USER_ID = "cartuser";
 
@@ -31,6 +39,10 @@ public class CartServiceTest {
     @BeforeEach
     void setUp() {
         redisTemplate.delete("cart:" + USER_ID);
+        pointHistoryRepository.deleteAll();
+        orderItemRepository.deleteAll();
+        orderRepository.deleteAll();
+        reviewRepository.deleteAll();
         productRepository.deleteAll();
 
         productA = productRepository.save(Product.builder()

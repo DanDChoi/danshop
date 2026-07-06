@@ -1,11 +1,16 @@
 package com.dan.danshop.domain.cart.service;
 
+import com.dan.danshop.domain.cart.dto.CartCheckoutRequest;
 import com.dan.danshop.domain.cart.dto.CartItem;
 import com.dan.danshop.domain.cart.dto.CartResponse;
+import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.OrderItemRequest;
+import com.dan.danshop.domain.order.service.OrderService;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -16,11 +21,19 @@ import java.util.Map;
 import static com.dan.danshop.global.exception.ErrorCode.*;
 
 @Service
-@RequiredArgsConstructor
 public class CartService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
+    private final OrderService orderService;
+
+    public CartService(RedisTemplate<String, Object> redisTemplate,
+                       ProductRepository productRepository,
+                       @Lazy OrderService orderService) {
+        this.redisTemplate = redisTemplate;
+        this.productRepository = productRepository;
+        this.orderService = orderService;
+    }
 
     private static final String CART_KEY_PREFIX = "cart:";
 
@@ -86,5 +99,30 @@ public class CartService {
 
     public void clearCart(String userId) {
         redisTemplate.delete(cartKey(userId));
+    }
+
+    public Long checkout(String userId, CartCheckoutRequest request) {
+        CartResponse cart = getCart(userId);
+        if (cart.getItems().isEmpty()) {
+            throw new BusinessException(CART_ITEM_NOT_FOUND);
+        }
+
+        List<OrderItemRequest> items = cart.getItems().stream()
+                .map(item -> new OrderItemRequest(item.getProductId(), item.getQuantity()))
+                .toList();
+
+        CreateRequest createRequest = new CreateRequest(
+                request.getCouponId(),
+                request.getUsePoints(),
+                cart.getTotalAmount(),
+                request.getPostNo(),
+                request.getBaseAddr(),
+                request.getDetailAddr(),
+                items
+        );
+
+        Long orderId = orderService.createOrder(createRequest);
+        clearCart(userId);
+        return orderId;
     }
 }

@@ -1,13 +1,18 @@
 package com.dan.danshop.domain.cart.controller;
 
+import com.dan.danshop.domain.cart.dto.CartCheckoutRequest;
 import com.dan.danshop.domain.cart.dto.CartResponse;
 import com.dan.danshop.domain.cart.service.CartService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.Map;
 
 @RestController
 @RequiredArgsConstructor
@@ -56,5 +61,13 @@ public class CartController {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         cartService.clearCart(userId);
         return ResponseEntity.ok("장바구니가 비워졌습니다.");
+    }
+
+    @PostMapping("/checkout")
+    @Operation(summary = "장바구니 바로 주문")
+    public ResponseEntity<Map<String, Long>> checkout(@Valid @RequestBody CartCheckoutRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        Long orderId = cartService.checkout(userId, request);
+        return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("orderId", orderId));
     }
 }
