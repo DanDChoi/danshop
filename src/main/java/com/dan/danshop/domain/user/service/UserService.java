@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.user.service;
 
+import com.dan.danshop.domain.user.dto.ChangePasswordRequest;
 import com.dan.danshop.domain.user.dto.LoginRequest;
 import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
@@ -102,5 +103,18 @@ public class UserService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
         return UserProfileResponse.from(user);
+    }
+
+    @org.springframework.transaction.annotation.Transactional
+    public void changePassword(ChangePasswordRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User user = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+
+        if (!passwordEncoder.matches(request.getCurrentPassword(), user.getPassword())) {
+            throw new BusinessException(PASSWORD_NOT_MATCH);
+        }
+
+        user.changePassword(passwordEncoder.encode(request.getNewPassword()));
     }
 }

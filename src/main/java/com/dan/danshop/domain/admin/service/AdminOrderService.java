@@ -1,6 +1,8 @@
 package com.dan.danshop.domain.admin.service;
 
 import com.dan.danshop.domain.admin.dto.OrderStatusUpdateRequest;
+import com.dan.danshop.domain.notification.dto.NotificationEvent;
+import com.dan.danshop.domain.notification.service.NotificationService;
 import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderStatus;
@@ -19,12 +21,20 @@ import static com.dan.danshop.global.exception.ErrorCode.ORDER_NOT_FOUND;
 public class AdminOrderService {
 
     private final OrderRepository orderRepository;
+    private final NotificationService notificationService;
 
     @Transactional
     public void updateOrderStatus(Long orderId, OrderStatusUpdateRequest request) {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
         order.updateStatus(request.getStatus());
+
+        String userId = order.getUser().getUserId();
+        notificationService.send(userId, new NotificationEvent(
+                "ORDER_STATUS_CHANGED",
+                "주문 #" + orderId + " 상태가 " + request.getStatus().getDescription() + "(으)로 변경되었습니다.",
+                orderId
+        ));
     }
 
     @Transactional(readOnly = true)
