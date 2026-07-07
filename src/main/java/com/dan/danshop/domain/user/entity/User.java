@@ -43,6 +43,10 @@ public class User extends BaseEntity {
         this.pointBalance = Math.max(0L, this.pointBalance - amount);
     }
 
+    public void changePassword(String encodedNewPassword) {
+        this.password = encodedNewPassword;
+    }
+
     public static User from(SignupRequest request, String encodedPassword) {
         return User.builder()
                 .userId(request.getUserId())

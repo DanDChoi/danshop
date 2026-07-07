@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.user.controller;
 
+import com.dan.danshop.domain.user.dto.ChangePasswordRequest;
 import com.dan.danshop.domain.user.dto.LoginRequest;
 import com.dan.danshop.domain.user.dto.RefreshRequest;
 import com.dan.danshop.domain.user.dto.SignupRequest;
@@ -54,5 +55,12 @@ public class UserController {
     @Operation(summary = "내 프로필 조회")
     public ResponseEntity<UserProfileResponse> getProfile() {
         return ResponseEntity.ok(userService.getProfile());
+    }
+
+    @PutMapping(value = "/password")
+    @Operation(summary = "비밀번호 변경")
+    public ResponseEntity<String> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        userService.changePassword(request);
+        return ResponseEntity.ok("비밀번호가 변경되었습니다.");
     }
 }
