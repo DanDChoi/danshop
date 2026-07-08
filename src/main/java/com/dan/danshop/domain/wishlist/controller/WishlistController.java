@@ -48,4 +48,10 @@ public class WishlistController {
         wishlistService.clear(userId());
         return ResponseEntity.noContent().build();
     }
+
+    @PostMapping("/{productId}/to-cart")
+    public ResponseEntity<String> moveToCart(@PathVariable Long productId) {
+        wishlistService.moveToCart(userId(), productId);
+        return ResponseEntity.ok("장바구니에 추가되었습니다.");
+    }
 }

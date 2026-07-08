@@ -1,10 +1,13 @@
 package com.dan.danshop.domain.wishlist.service;
 
+import com.dan.danshop.domain.cart.service.CartService;
 import com.dan.danshop.domain.product.entity.Product;
 import com.dan.danshop.domain.product.repository.ProductRepository;
 import com.dan.danshop.domain.wishlist.dto.WishlistResponse;
 import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 
@@ -15,11 +18,20 @@ import java.util.Set;
 import static com.dan.danshop.global.exception.ErrorCode.PRODUCT_NOT_FOUND;
 
 @Service
-@RequiredArgsConstructor
 public class WishlistService {
 
     private final RedisTemplate<String, Object> redisTemplate;
     private final ProductRepository productRepository;
+    private final CartService cartService;
+
+    @Autowired
+    public WishlistService(RedisTemplate<String, Object> redisTemplate,
+                           ProductRepository productRepository,
+                           @Lazy CartService cartService) {
+        this.redisTemplate = redisTemplate;
+        this.productRepository = productRepository;
+        this.cartService = cartService;
+    }
 
     private static final String WISHLIST_PREFIX = "wishlist:";
 
@@ -63,5 +75,12 @@ public class WishlistService {
 
     public void clear(String userId) {
         redisTemplate.delete(key(userId));
+    }
+
+    public void moveToCart(String userId, Long productId) {
+        productRepository.findById(productId)
+                .orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
+        cartService.addToCart(userId, productId, 1);
+        remove(userId, productId);
     }
 }
