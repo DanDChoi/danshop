@@ -3,8 +3,11 @@ package com.dan.danshop.domain.order.service;
 import com.dan.danshop.DataSourceProxyConfig;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
+import com.dan.danshop.domain.order.dto.UpdateAddressRequest;
 import com.dan.danshop.domain.order.entity.Order;
+import com.dan.danshop.domain.order.entity.OrderStatus;
 import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
+import com.dan.danshop.global.exception.BusinessException;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
 import com.dan.danshop.domain.point.repository.PointHistoryRepository;
@@ -21,6 +24,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.test.util.ReflectionTestUtils;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -28,6 +32,9 @@ import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 @SpringBootTest
 @Import(DataSourceProxyConfig.class)
@@ -154,6 +161,68 @@ public class OrderServiceTest {
         System.out.println("주문 후 재고: "+stock);
         System.out.println("주문 상태: " + cancelledOrder.getStatus());
         System.out.println("복구된 재고: " + updatedProduct.getStock());
+    }
+
+    @Test
+    void PENDING_상태에서_배송지를_변경할_수_있다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("배송지테스트상품").price(BigDecimal.valueOf(10000)).stock(10).build());
+        User user = userRepository.save(User.builder().userId("addruser").build());
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("addruser", null, List.of())
+        );
+        Long orderId = orderService.createOrder(new CreateRequest(
+                null, null, BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        UpdateAddressRequest request = new UpdateAddressRequest();
+        ReflectionTestUtils.setField(request, "postNo", "99999");
+        ReflectionTestUtils.setField(request, "baseAddr", "부산시 해운대구");
+        ReflectionTestUtils.setField(request, "detailAddr", "202호");
+
+        orderService.updateAddress(orderId, request);
+
+        Order updated = orderRepository.findById(orderId).orElseThrow();
+        assertThat(updated.getPostNo()).isEqualTo("99999");
+        assertThat(updated.getBaseAddr()).isEqualTo("부산시 해운대구");
+        assertThat(updated.getDetailAddr()).isEqualTo("202호");
+
+        System.out.println("배송지 변경 완료: " + updated.getBaseAddr() + " " + updated.getDetailAddr());
+    }
+
+    @Test
+    void PAID_상태에서는_배송지를_변경할_수_없다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("배송지테스트상품2").price(BigDecimal.valueOf(10000)).stock(10).build());
+        userRepository.save(User.builder().userId("addruser2").build());
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("addruser2", null, List.of())
+        );
+        Long orderId = orderService.createOrder(new CreateRequest(
+                null, null, BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        // PENDING → PAID 상태로 변경
+        Order order = orderRepository.findById(orderId).orElseThrow();
+        ReflectionTestUtils.setField(order, "status", OrderStatus.PAID);
+        orderRepository.save(order);
+
+        UpdateAddressRequest request = new UpdateAddressRequest();
+        ReflectionTestUtils.setField(request, "postNo", "99999");
+        ReflectionTestUtils.setField(request, "baseAddr", "부산시 해운대구");
+        ReflectionTestUtils.setField(request, "detailAddr", "202호");
+
+        assertThatThrownBy(() -> orderService.updateAddress(orderId, request))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("배송 준비 전 주문만 배송지를 변경할 수 있습니다.");
+
+        System.out.println("PAID 상태 배송지 변경 시도 예외 확인");
     }
 
     @Test

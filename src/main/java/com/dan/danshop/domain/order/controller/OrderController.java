@@ -3,6 +3,7 @@ package com.dan.danshop.domain.order.controller;
 import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderResponse;
+import com.dan.danshop.domain.order.dto.UpdateAddressRequest;
 import com.dan.danshop.domain.order.service.OrderService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -40,6 +41,14 @@ public class OrderController {
     @Operation(summary = "주문 단건 조회")
     public ResponseEntity<OrderDetailResponse> findOrder(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.findOrder(id));
+    }
+
+    @PatchMapping("/orders/{id}/address")
+    @Operation(summary = "배송지 변경 (PENDING 상태만 가능)")
+    public ResponseEntity<String> updateAddress(@PathVariable Long id,
+                                                @Valid @RequestBody UpdateAddressRequest request) {
+        orderService.updateAddress(id, request);
+        return ResponseEntity.ok("배송지가 변경되었습니다.");
     }
 
     @GetMapping("/orders")

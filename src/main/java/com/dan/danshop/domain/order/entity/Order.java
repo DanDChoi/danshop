@@ -12,6 +12,7 @@ import java.math.BigDecimal;
 import java.util.Set;
 import java.util.Map;
 
+import static com.dan.danshop.global.exception.ErrorCode.ADDRESS_CHANGE_NOT_ALLOWED;
 import static com.dan.danshop.global.exception.ErrorCode.IMPOSSIBLE_CANCEL_ORDER;
 import static com.dan.danshop.global.exception.ErrorCode.INVALID_ORDER_STATUS_TRANSITION;
 
@@ -60,6 +61,15 @@ public class Order extends BaseEntity {
             OrderStatus.PAID, Set.of(OrderStatus.SHIPPED, OrderStatus.CANCELLED),
             OrderStatus.SHIPPED, Set.of(OrderStatus.DELIVERED)
     );
+
+    public void updateAddress(String postNo, String baseAddr, String detailAddr) {
+        if (this.status != OrderStatus.PENDING) {
+            throw new BusinessException(ADDRESS_CHANGE_NOT_ALLOWED);
+        }
+        this.postNo = postNo;
+        this.baseAddr = baseAddr;
+        this.detailAddr = detailAddr;
+    }
 
     public void updateStatus(OrderStatus newStatus) {
         Set<OrderStatus> allowed = ALLOWED_TRANSITIONS.getOrDefault(this.status, Set.of());

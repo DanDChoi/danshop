@@ -19,6 +19,7 @@ public enum ErrorCode {
     IMPOSSIBLE_CANCEL_ORDER(HttpStatus.BAD_REQUEST, "취소 가능한 주문이 아닙니다."),
     NOT_ORDERED_USER(HttpStatus.FORBIDDEN, "본인의 주문만 취소 가능합니다."),
     INVALID_ORDER_STATUS_TRANSITION(HttpStatus.BAD_REQUEST, "허용되지 않는 주문 상태 변경입니다."),
+    ADDRESS_CHANGE_NOT_ALLOWED(HttpStatus.BAD_REQUEST, "배송 준비 전 주문만 배송지를 변경할 수 있습니다."),
 
     // Coupon
     COUPON_NOT_FOUND(HttpStatus.NOT_FOUND, "쿠폰을 찾을 수 없습니다."),
