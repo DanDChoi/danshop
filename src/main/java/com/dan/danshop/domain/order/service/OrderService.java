@@ -8,6 +8,7 @@ import com.dan.danshop.domain.order.dto.CreateRequest;
 import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.dto.OrderResponse;
+import com.dan.danshop.domain.order.dto.UpdateAddressRequest;
 import com.dan.danshop.domain.order.entity.Order;
 import com.dan.danshop.domain.order.entity.OrderItem;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
@@ -149,6 +150,22 @@ public class OrderService {
         String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         PageRequest pageRequest = PageRequest.of(page, size);
         return orderRepository.findByUserIdString(userId, pageRequest).map(OrderResponse::from);
+    }
+
+    @Transactional
+    public void updateAddress(Long orderId, UpdateAddressRequest request) {
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        User currentUser = userRepository.findByUserId(userId)
+                .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
+
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+
+        if (!order.getUser().getId().equals(currentUser.getId())) {
+            throw new BusinessException(NOT_ORDERED_USER);
+        }
+
+        order.updateAddress(request.getPostNo(), request.getBaseAddr(), request.getDetailAddr());
     }
 
     @Transactional(readOnly = true)
