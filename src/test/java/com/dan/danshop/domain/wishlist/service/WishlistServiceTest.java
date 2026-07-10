@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.wishlist.service;
 
+import com.dan.danshop.domain.cart.service.CartService;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
 import com.dan.danshop.domain.order.repository.OrderRepository;
 import com.dan.danshop.domain.point.repository.PointHistoryRepository;
@@ -24,6 +25,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 public class WishlistServiceTest {
 
     @Autowired private WishlistService wishlistService;
+    @Autowired private CartService cartService;
     @Autowired private ProductRepository productRepository;
     @Autowired private RedisTemplate<String, Object> redisTemplate;
     @Autowired private ReviewRepository reviewRepository;
@@ -39,6 +41,7 @@ public class WishlistServiceTest {
     @BeforeEach
     void setUp() {
         redisTemplate.delete("wishlist:" + USER_ID);
+        redisTemplate.delete("cart:" + USER_ID);
         pointHistoryRepository.deleteAll();
         orderItemRepository.deleteAll();
         orderRepository.deleteAll();
@@ -133,5 +136,26 @@ public class WishlistServiceTest {
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("상품을 찾을 수 없습니다.");
         System.out.println("존재하지 않는 상품 찜 시도 예외 확인");
+    }
+
+    @Test
+    void 위시리스트_상품을_장바구니로_이동하면_위시리스트에서_제거된다() {
+        // given
+        wishlistService.add(USER_ID, productA.getId());
+        wishlistService.add(USER_ID, productB.getId());
+
+        // when - productA를 장바구니로 이동
+        wishlistService.moveToCart(USER_ID, productA.getId());
+
+        // then - 위시리스트에서 제거
+        assertThat(wishlistService.isWished(USER_ID, productA.getId())).isFalse();
+        // 나머지 상품은 그대로
+        assertThat(wishlistService.isWished(USER_ID, productB.getId())).isTrue();
+        // 장바구니에 추가됨
+        assertThat(cartService.getCart(USER_ID).getItems())
+                .extracting(item -> item.getProductId())
+                .contains(productA.getId());
+
+        System.out.println("위시리스트→장바구니 이동 완료: " + productA.getProductName());
     }
 }
