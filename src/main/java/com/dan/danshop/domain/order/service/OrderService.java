@@ -138,6 +138,13 @@ public class OrderService {
         //포인트 취소
         pointService.cancelOrderPoints(curruntUser, orderId);
 
+        //쿠폰 복원
+        if (cancelOrder.getCouponId() != null) {
+            userCouponRepository
+                    .findByUserIdAndCouponId(curruntUser.getId(), cancelOrder.getCouponId())
+                    .ifPresent(UserCoupon::restore);
+        }
+
         notificationService.send(userId, new NotificationEvent(
                 "ORDER_CANCELLED",
                 "주문 #" + orderId + "이 취소되었습니다.",

@@ -31,6 +31,7 @@ public class Order extends BaseEntity {
     @Enumerated(EnumType.STRING)
     private OrderStatus status;
     private BigDecimal payAmount;
+    private Long couponId;
     private String postNo;
     private String baseAddr;
     private String detailAddr;
@@ -42,6 +43,7 @@ public class Order extends BaseEntity {
         return Order.builder()
                 .status(OrderStatus.PENDING)
                 .payAmount(payAmount)
+                .couponId(createRequest.getCouponId())
                 .postNo(createRequest.getPostNo())
                 .baseAddr(createRequest.getBaseAddr())
                 .detailAddr(createRequest.getDetailAddr())
