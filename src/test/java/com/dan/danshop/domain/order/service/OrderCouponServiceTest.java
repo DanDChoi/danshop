@@ -252,4 +252,48 @@ public class OrderCouponServiceTest {
 
         System.out.println("만료 쿠폰 예외 확인 완료");
     }
+
+    @Test
+    void 쿠폰_적용_주문_취소시_쿠폰이_복원된다() {
+        // given - 쿠폰 발급 후 주문에 사용
+        Coupon coupon = Coupon.builder()
+                .name("복원테스트 쿠폰")
+                .discountType(DiscountType.AMOUNT)
+                .discountValue(BigDecimal.valueOf(5000))
+                .minOrderAmount(BigDecimal.ZERO)
+                .totalQuantity(10)
+                .remainQuantity(10)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+        couponService.issueCoupon(coupon.getId(), user.getUserId());
+
+        Long orderId = orderService.createOrder(new CreateRequest(
+                coupon.getId(), null,
+                BigDecimal.valueOf(50000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        // 쿠폰이 사용됨 확인
+        var usedCoupon = userCouponRepository
+                .findByUserIdAndCouponId(
+                        userRepository.findByUserId(user.getUserId()).orElseThrow().getId(),
+                        coupon.getId()
+                ).orElseThrow();
+        assertThat(usedCoupon.isUsed()).isTrue();
+
+        // when - 주문 취소
+        orderService.cancelOrder(orderId);
+
+        // then - 쿠폰 복원 확인
+        var restoredCoupon = userCouponRepository
+                .findByUserIdAndCouponId(
+                        userRepository.findByUserId(user.getUserId()).orElseThrow().getId(),
+                        coupon.getId()
+                ).orElseThrow();
+        assertThat(restoredCoupon.isUsed()).isFalse();
+
+        System.out.println("주문 취소 후 쿠폰 복원 확인 완료");
+    }
 }
