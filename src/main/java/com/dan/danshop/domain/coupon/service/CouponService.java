@@ -30,6 +30,7 @@ public class CouponService {
     private final RedisTemplate<String, Object> redisTemplate;
 
     private static final String COUPON_KEY = "coupon:";
+    private static final String COUPON_ISSUED_KEY = "coupon:issued:";
 
     public void createCoupon(Coupon coupon) {
         couponRepository.save(coupon);
@@ -42,14 +43,16 @@ public class CouponService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
-        // 2. 중복 발급 체크
-        if (userCouponRepository.existsByUserIdAndCouponId(user.getId(), couponId)) {
+        // 2. Redis Set으로 원자적 중복 발급 체크 (SADD: 새 추가면 1L, 이미 존재하면 0L 반환)
+        Long added = redisTemplate.opsForSet().add(COUPON_ISSUED_KEY + couponId, userId);
+        if (added == null || added == 0L) {
             throw new BusinessException(COUPON_ALREADY_ISSUED);
         }
 
         // 3. Redis에서 수량 차감 (원자적 연산)
         Long remain = redisTemplate.opsForValue().decrement(COUPON_KEY + couponId);
         if (remain == null || remain < 0) {
+            redisTemplate.opsForSet().remove(COUPON_ISSUED_KEY + couponId, userId);
             throw new BusinessException(COUPON_SOLD_OUT);
         }
 

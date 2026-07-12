@@ -38,12 +38,15 @@ public class CouponServiceTest {
     @Autowired private RedisTemplate<String, Object> redisTemplate;
 
     private static final String COUPON_KEY = "coupon:";
+    private static final String COUPON_ISSUED_KEY = "coupon:issued:";
 
     @BeforeEach
     void setUp() {
         userCouponRepository.deleteAll();
         couponRepository.deleteAll();
         userRepository.deleteAll();
+        // 테스트 간 Redis 잔여 데이터 제거
+        redisTemplate.getConnectionFactory().getConnection().serverCommands().flushAll();
     }
 
     // ───────────────────────────────────────────
@@ -195,7 +198,65 @@ public class CouponServiceTest {
     }
 
     // ───────────────────────────────────────────
-    // 3단계: 동시성 테스트 - 100명이 동시에 요청해도 50개만 발급
+    // 3단계: 동시성 테스트 (Redis Set 중복 방지 검증)
+    // ───────────────────────────────────────────
+
+    @Test
+    void 동일_유저가_동시에_2번_요청해도_1건만_발급된다() throws InterruptedException {
+        // given
+        User user = userRepository.save(User.builder()
+                .userId("testuser")
+                .email("test@test.com")
+                .password("password")
+                .name("테스트유저")
+                .role(Role.ROLE_USER)
+                .build());
+
+        Coupon coupon = Coupon.builder()
+                .name("동시성 중복방지 쿠폰")
+                .discountType(DiscountType.AMOUNT)
+                .discountValue(BigDecimal.valueOf(5000))
+                .minOrderAmount(BigDecimal.valueOf(30000))
+                .totalQuantity(100)
+                .remainQuantity(100)
+                .expiresAt(LocalDateTime.now().plusDays(7))
+                .build();
+        couponService.createCoupon(coupon);
+
+        // when - 동일 유저가 동시에 2번 요청
+        int threadCount = 2;
+        ExecutorService executor = Executors.newFixedThreadPool(threadCount);
+        CountDownLatch latch = new CountDownLatch(threadCount);
+        AtomicInteger successCount = new AtomicInteger(0);
+        AtomicInteger failCount = new AtomicInteger(0);
+        Long couponId = coupon.getId();
+
+        for (int i = 0; i < threadCount; i++) {
+            executor.submit(() -> {
+                try {
+                    couponService.issueCoupon(couponId, user.getUserId());
+                    successCount.incrementAndGet();
+                } catch (BusinessException e) {
+                    failCount.incrementAndGet();
+                } finally {
+                    latch.countDown();
+                }
+            });
+        }
+
+        latch.await(10, TimeUnit.SECONDS);
+        executor.shutdown();
+
+        // then - 정확히 1건만 성공, DB에도 1건만 저장
+        assertThat(successCount.get()).isEqualTo(1);
+        assertThat(failCount.get()).isEqualTo(1);
+        assertThat(userCouponRepository.count()).isEqualTo(1);
+
+        System.out.println("동일 유저 동시 요청: 성공 " + successCount.get() + "건, 실패 " + failCount.get() + "건");
+    }
+
+    // ───────────────────────────────────────────
+    // 4단계: 동시성 테스트 - 100명이 동시에 요청해도 50개만 발급
     // ───────────────────────────────────────────
 
     @Test
