@@ -11,6 +11,7 @@ import com.dan.danshop.domain.user.repository.UserRepository;
 import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -32,6 +33,19 @@ public class CouponService {
     private static final String COUPON_KEY = "coupon:";
     private static final String COUPON_ISSUED_KEY = "coupon:issued:";
 
+    // SADD + DECR 원자적 처리 Lua Script
+    // 반환값: 0 = 중복 발급, -1 = 수량 소진, 1 = 발급 성공
+    private static final DefaultRedisScript<Long> ISSUE_COUPON_SCRIPT = new DefaultRedisScript<>("""
+            local added = redis.call('SADD', KEYS[1], ARGV[1])
+            if added == 0 then return 0 end
+            local remain = redis.call('DECR', KEYS[2])
+            if remain < 0 then
+                redis.call('SREM', KEYS[1], ARGV[1])
+                return -1
+            end
+            return 1
+            """, Long.class);
+
     public void createCoupon(Coupon coupon) {
         couponRepository.save(coupon);
         redisTemplate.opsForValue().set(COUPON_KEY + coupon.getId(), coupon.getTotalQuantity());
@@ -43,24 +57,20 @@ public class CouponService {
         User user = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
-        // 2. Redis Set으로 원자적 중복 발급 체크 (SADD: 새 추가면 1L, 이미 존재하면 0L 반환)
-        Long added = redisTemplate.opsForSet().add(COUPON_ISSUED_KEY + couponId, userId);
-        if (added == null || added == 0L) {
-            throw new BusinessException(COUPON_ALREADY_ISSUED);
-        }
+        // 2. Lua Script로 중복 체크 + 수량 차감 원자적 처리
+        Long result = redisTemplate.execute(
+                ISSUE_COUPON_SCRIPT,
+                List.of(COUPON_ISSUED_KEY + couponId, COUPON_KEY + couponId),
+                userId
+        );
+        if (result == null || result == 0L) throw new BusinessException(COUPON_ALREADY_ISSUED);
+        if (result == -1L) throw new BusinessException(COUPON_SOLD_OUT);
 
-        // 3. Redis에서 수량 차감 (원자적 연산)
-        Long remain = redisTemplate.opsForValue().decrement(COUPON_KEY + couponId);
-        if (remain == null || remain < 0) {
-            redisTemplate.opsForSet().remove(COUPON_ISSUED_KEY + couponId, userId);
-            throw new BusinessException(COUPON_SOLD_OUT);
-        }
-
-        // 4. 쿠폰 조회
+        // 3. 쿠폰 조회
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new BusinessException(COUPON_NOT_FOUND));
 
-        // 5. UserCoupon 저장
+        // 4. UserCoupon 저장
         UserCoupon userCoupon = UserCoupon.builder()
                 .user(user)
                 .coupon(coupon)
