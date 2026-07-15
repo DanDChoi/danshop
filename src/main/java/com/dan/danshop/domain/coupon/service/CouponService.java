@@ -66,9 +66,10 @@ public class CouponService {
         if (result == null || result == 0L) throw new BusinessException(COUPON_ALREADY_ISSUED);
         if (result == -1L) throw new BusinessException(COUPON_SOLD_OUT);
 
-        // 3. 쿠폰 조회
+        // 3. 쿠폰 조회 + DB remainQuantity 차감
         Coupon coupon = couponRepository.findById(couponId)
                 .orElseThrow(() -> new BusinessException(COUPON_NOT_FOUND));
+        coupon.decrementRemain();
 
         // 4. UserCoupon 저장
         UserCoupon userCoupon = UserCoupon.builder()

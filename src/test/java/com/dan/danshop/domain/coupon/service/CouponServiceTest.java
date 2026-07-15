@@ -120,7 +120,12 @@ public class CouponServiceTest {
         Object redisValue = redisTemplate.opsForValue().get(COUPON_KEY + coupon.getId());
         assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(9);
 
+        // then - DB remainQuantity 감소 확인 (10 → 9)
+        Coupon updated = couponRepository.findById(coupon.getId()).orElseThrow();
+        assertThat(updated.getRemainQuantity()).isEqualTo(9);
+
         System.out.println("Redis 남은 수량: " + redisValue);
+        System.out.println("DB 남은 수량: " + updated.getRemainQuantity());
     }
 
     @Test
