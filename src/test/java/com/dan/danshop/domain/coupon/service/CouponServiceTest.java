@@ -321,17 +321,21 @@ public class CouponServiceTest {
         assertThat(successCount.get()).isEqualTo(totalQuantity);
         assertThat(failCount.get()).isEqualTo(threadCount - totalQuantity);
 
-        // then - DB에도 정확히 50건만 저장
+        // then - DB UserCoupon 정확히 50건만 저장
         long issuedCount = userCouponRepository.count();
         assertThat(issuedCount).isEqualTo(totalQuantity);
 
-        // then - Redis 수량: 50개 차감(성공) + 50개 차감(실패) = -50
-        // decrement()는 원자적으로 감소만 할 뿐 음수를 막지 않으므로 최종값은 -(초과요청수)
+        // then - DB remainQuantity 정확히 0으로 차감 (원자적 UPDATE로 lost update 없음)
+        Coupon updated = couponRepository.findById(couponId).orElseThrow();
+        assertThat(updated.getRemainQuantity()).isEqualTo(0);
+
+        // then - Redis 수량: Lua Script가 음수 시 SREM만 하고 INCR은 안 하므로 최종값은 -(초과요청수)
         Object redisValue = redisTemplate.opsForValue().get(COUPON_KEY + couponId);
         assertThat(Integer.parseInt(redisValue.toString())).isEqualTo(-(threadCount - totalQuantity));
 
         System.out.println("성공: " + successCount.get() + "건, 실패: " + failCount.get() + "건");
         System.out.println("DB 발급 수량: " + issuedCount);
+        System.out.println("DB remainQuantity: " + updated.getRemainQuantity());
         System.out.println("Redis 최종 수량: " + redisValue);
     }
 }
