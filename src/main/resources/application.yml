@@ -29,4 +29,13 @@ jwt:
   access-expiration: 1800000
   refresh-expiration: 604800000
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 
