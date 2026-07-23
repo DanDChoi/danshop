@@ -6,7 +6,11 @@ import com.dan.danshop.domain.product.dto.ProductResponse;
 import com.dan.danshop.domain.product.dto.ProductSearchCondition;
 import com.dan.danshop.domain.product.dto.UpdateRequest;
 import com.dan.danshop.domain.product.service.ProductService;
+import com.dan.danshop.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
@@ -28,6 +32,9 @@ public class ProductController {
     @PostMapping(value = "/product")
     @Operation(summary = "상품 등록")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "201", description = "상품 등록 성공")
+    @ApiResponse(responseCode = "403", description = "관리자 권한 필요",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> addProduct(@Valid @RequestBody AddRequest addRequest) {
         productService.addProduct(addRequest);
 
@@ -37,6 +44,11 @@ public class ProductController {
     @PatchMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 수정")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "200", description = "상품 수정 성공")
+    @ApiResponse(responseCode = "404", description = "상품 없음",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "403", description = "관리자 권한 필요",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> updateProduct(@PathVariable Long productNo, @Valid @RequestBody UpdateRequest updateRequest) {
 
         productService.updateProduct(productNo, updateRequest);
@@ -47,6 +59,9 @@ public class ProductController {
 
     @GetMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 조회")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "404", description = "상품 없음",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<ProductResponse> findProduct(@PathVariable Long productNo) {
         return ResponseEntity.ok(productService.findByProductNo(productNo));
     }
@@ -82,6 +97,11 @@ public class ProductController {
     @DeleteMapping(value = "/product/{productNo}")
     @Operation(summary = "상품 삭제")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "200", description = "삭제 성공")
+    @ApiResponse(responseCode = "404", description = "상품 없음",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "403", description = "관리자 권한 필요",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> deleteProduct(@PathVariable Long productNo) {
         productService.deleteProduct(productNo);
         return ResponseEntity.status(HttpStatus.OK).body("상품 삭제 완료");
