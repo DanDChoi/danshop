@@ -5,7 +5,11 @@ import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderResponse;
 import com.dan.danshop.domain.order.dto.UpdateAddressRequest;
 import com.dan.danshop.domain.order.service.OrderService;
+import com.dan.danshop.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
@@ -23,6 +27,9 @@ public class OrderController {
 
     @PostMapping("/orders")
     @Operation(summary = "주문 생성")
+    @ApiResponse(responseCode = "201", description = "주문 생성 성공")
+    @ApiResponse(responseCode = "409", description = "재고 부족",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateRequest createRequest) {
 
         orderService.createOrder(createRequest);
@@ -32,6 +39,11 @@ public class OrderController {
 
     @PatchMapping("/orders/{id}/cancel")
     @Operation(summary = "주문 취소")
+    @ApiResponse(responseCode = "200", description = "취소 성공")
+    @ApiResponse(responseCode = "400", description = "취소 불가 상태",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "403", description = "본인 주문 아님",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> cancelOrder(@PathVariable Long id) {
         orderService.cancelOrder(id);
         return ResponseEntity.status(HttpStatus.OK).body("주문 취소 완료");
@@ -39,12 +51,18 @@ public class OrderController {
 
     @GetMapping("/orders/{id}")
     @Operation(summary = "주문 단건 조회")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "404", description = "주문 없음",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<OrderDetailResponse> findOrder(@PathVariable Long id) {
         return ResponseEntity.ok(orderService.findOrder(id));
     }
 
     @PatchMapping("/orders/{id}/address")
     @Operation(summary = "배송지 변경 (PENDING 상태만 가능)")
+    @ApiResponse(responseCode = "200", description = "변경 성공")
+    @ApiResponse(responseCode = "400", description = "배송 준비 전 주문 아님",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<String> updateAddress(@PathVariable Long id,
                                                 @Valid @RequestBody UpdateAddressRequest request) {
         orderService.updateAddress(id, request);

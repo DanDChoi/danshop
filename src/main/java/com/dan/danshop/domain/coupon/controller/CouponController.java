@@ -5,7 +5,11 @@ import com.dan.danshop.domain.coupon.dto.CouponResponse;
 import com.dan.danshop.domain.coupon.dto.MyCouponResponse;
 import com.dan.danshop.domain.coupon.entity.Coupon;
 import com.dan.danshop.domain.coupon.service.CouponService;
+import com.dan.danshop.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import lombok.RequiredArgsConstructor;
 import jakarta.validation.Valid;
@@ -27,6 +31,9 @@ public class CouponController {
     @PostMapping("/coupons")
     @Operation(summary = "쿠폰 생성 (ADMIN)")
     @PreAuthorize("hasRole('ADMIN')")
+    @ApiResponse(responseCode = "201", description = "쿠폰 생성 성공")
+    @ApiResponse(responseCode = "403", description = "관리자 권한 필요",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> createCoupon(@Valid @RequestBody CouponCreateRequest createRequest) {
         Coupon coupon = Coupon.builder()
                 .name(createRequest.getName())
@@ -43,6 +50,9 @@ public class CouponController {
 
     @PostMapping("/coupons/{couponId}/issue")
     @Operation(summary = "쿠폰 선착순 발급")
+    @ApiResponse(responseCode = "200", description = "발급 성공")
+    @ApiResponse(responseCode = "409", description = "이미 발급받은 쿠폰 또는 선착순 마감",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> issueCoupon(@PathVariable Long couponId, Authentication authentication) {
         couponService.issueCoupon(couponId, authentication.getName());
         return ResponseEntity.ok("쿠폰 발급 완료");
