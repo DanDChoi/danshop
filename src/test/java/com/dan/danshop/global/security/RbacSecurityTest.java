@@ -39,6 +39,17 @@ public class RbacSecurityTest {
     }
 
     // ───────────────────────────────────────────
+    // 401: 위조 토큰으로 접근
+    // ───────────────────────────────────────────
+
+    @Test
+    void 위조된_토큰으로_접근시_401() throws Exception {
+        mockMvc.perform(get("/coupons")
+                        .header("Authorization", "Bearer invalid.token.value"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    // ───────────────────────────────────────────
     // 401: 토큰 없이 접근
     // ───────────────────────────────────────────
 
