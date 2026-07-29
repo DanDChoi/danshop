@@ -25,8 +25,4 @@ public class Coupon extends BaseEntity {
     private int totalQuantity;
     private int remainQuantity;
     private LocalDateTime expiresAt;
-
-    public void decrementRemain() {
-        this.remainQuantity--;
-    }
 }
