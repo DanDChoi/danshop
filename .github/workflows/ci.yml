@@ -10,6 +10,31 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: danshop
+          POSTGRES_USER: danuser
+          POSTGRES_PASSWORD: dan
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+      redis:
+        image: redis:7
+        ports:
+          - 6379:6379
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     steps:
       - name: 코드 체크아웃
         uses: actions/checkout@v4
@@ -20,8 +45,8 @@ jobs:
           java-version: '21'
           distribution: 'temurin'
 
-      - name: Gradle 빌드 (테스트 제외)
-        run: ./gradlew bootJar -x test
+      - name: Gradle 빌드 및 테스트
+        run: ./gradlew build
 
       - name: Docker 이미지 빌드
         run: docker build -t danshop .
