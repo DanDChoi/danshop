@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class ProductResponse implements Serializable {
+    private Long productNo;
     private String productName;
     private BigDecimal price;
     private String category;
@@ -23,6 +24,7 @@ public class ProductResponse implements Serializable {
 
     public static ProductResponse from(Product product) {
         return ProductResponse.builder()
+                .productNo(product.getId())
                 .productName(product.getProductName())
                 .price(product.getPrice())
                 .category(product.getCategory())
