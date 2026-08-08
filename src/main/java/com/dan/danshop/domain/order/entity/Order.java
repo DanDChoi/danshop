@@ -36,8 +36,10 @@ public class Order extends BaseEntity {
     private String baseAddr;
     private String detailAddr;
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id")
+    @JoinColumn(name = "user_id", nullable = true)
     private User user;
+    @Embedded
+    private Orderer orderer;
 
     public static Order from(CreateRequest createRequest, User user, BigDecimal payAmount) {
         return Order.builder()
