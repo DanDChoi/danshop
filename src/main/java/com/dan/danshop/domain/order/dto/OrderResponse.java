@@ -28,7 +28,7 @@ public class OrderResponse {
                 .postNo(order.getPostNo())
                 .baseAddr(order.getBaseAddr())
                 .detailAddr(order.getDetailAddr())
-                .userId(order.getUser().getUserId())
+                .userId(order.getUser() != null ? order.getUser().getUserId() : null)
                 .build();
     }
 }

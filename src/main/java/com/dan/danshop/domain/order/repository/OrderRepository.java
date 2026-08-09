@@ -10,12 +10,12 @@ import org.springframework.data.repository.query.Param;
 
 public interface OrderRepository extends JpaRepository<Order, Long> {
 
-    @Query("SELECT o FROM Order o JOIN FETCH o.user WHERE o.user.userId = :userId")
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.user WHERE o.user.userId = :userId")
     Page<Order> findByUserIdString(@Param("userId") String userId, Pageable pageable);
 
-    @Query("SELECT o FROM Order o JOIN FETCH o.user")
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.user")
     Page<Order> findAllWithUser(Pageable pageable);
 
-    @Query("SELECT o FROM Order o JOIN FETCH o.user WHERE (:status IS NULL OR o.status = :status)")
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.user WHERE (:status IS NULL OR o.status = :status)")
     Page<Order> findAllWithUserAndStatus(@Param("status") OrderStatus status, Pageable pageable);
 }
