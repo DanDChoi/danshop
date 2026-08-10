@@ -29,12 +29,13 @@ public class AdminOrderService {
                 .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
         order.updateStatus(request.getStatus());
 
-        String userId = order.getUser().getUserId();
-        notificationService.send(userId, new NotificationEvent(
-                "ORDER_STATUS_CHANGED",
-                "주문 #" + orderId + " 상태가 " + request.getStatus().getDescription() + "(으)로 변경되었습니다.",
-                orderId
-        ));
+        if (order.getUser() != null) {
+            notificationService.send(order.getUser().getUserId(), new NotificationEvent(
+                    "ORDER_STATUS_CHANGED",
+                    "주문 #" + orderId + " 상태가 " + request.getStatus().getDescription() + "(으)로 변경되었습니다.",
+                    orderId
+            ));
+        }
     }
 
     @Transactional(readOnly = true)
