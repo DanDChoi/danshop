@@ -284,7 +284,7 @@ public class OrderCouponServiceTest {
         assertThat(usedCoupon.isUsed()).isTrue();
 
         // when - 주문 취소
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(user.getUserId(), orderId);
 
         // then - 쿠폰 복원 확인
         var restoredCoupon = userCouponRepository

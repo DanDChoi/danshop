@@ -168,7 +168,7 @@ public class OrderPointServiceTest {
         assertThat(pointService.getBalance(user.getUserId())).isEqualTo(500L);
 
         // when - 주문 취소
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(user.getUserId(), orderId);
 
         // then - 적립 포인트 회수 → 잔액 0
         long balance = pointService.getBalance(user.getUserId());
@@ -201,7 +201,7 @@ public class OrderPointServiceTest {
         assertThat(pointService.getBalance(user.getUserId())).isEqualTo(1490L);
 
         // when - 주문 취소
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(user.getUserId(), orderId);
 
         // then - 사용 포인트 환불(+1000), 적립 포인트 회수(-490) → 2010
         // 실제로는 forceDeduct이므로: 1490 + 1000 - 490 = 2000

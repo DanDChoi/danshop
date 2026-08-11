@@ -152,7 +152,7 @@ public class OrderServiceTest {
         int stock = productRepository.findById(product.getId()).get().getStock();
 
         //주문취소
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder("testuser", orderId);
 
         // 취소 후 결과 확인
         Order cancelledOrder = orderRepository.findById(orderId).get();
@@ -183,7 +183,7 @@ public class OrderServiceTest {
         ReflectionTestUtils.setField(request, "baseAddr", "부산시 해운대구");
         ReflectionTestUtils.setField(request, "detailAddr", "202호");
 
-        orderService.updateAddress(orderId, request);
+        orderService.updateAddress("addruser", orderId, request);
 
         Order updated = orderRepository.findById(orderId).orElseThrow();
         assertThat(updated.getPostNo()).isEqualTo("99999");
@@ -218,7 +218,7 @@ public class OrderServiceTest {
         ReflectionTestUtils.setField(request, "baseAddr", "부산시 해운대구");
         ReflectionTestUtils.setField(request, "detailAddr", "202호");
 
-        assertThatThrownBy(() -> orderService.updateAddress(orderId, request))
+        assertThatThrownBy(() -> orderService.updateAddress("addruser2", orderId, request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("배송 준비 전 주문만 배송지를 변경할 수 있습니다.");
 
@@ -260,7 +260,7 @@ public class OrderServiceTest {
 
         QueryCountHolder.clear();
 
-        orderService.findOrderList(0, 10);
+        orderService.findOrderList("testuser2", 0, 10);
 
         QueryCount count = QueryCountHolder.getGrandTotal();
         System.out.println("SELECT: " + count.getSelect());
