@@ -146,7 +146,7 @@ public class AdminStatsServiceTest {
     void 취소된_주문은_상품별_판매량에서_제외된다() {
         // given - 상품A 3개 주문 후 취소, 상품B 2개 정상 주문
         Long cancelOrderId = placeOrder(productA, 3);
-        orderService.cancelOrder(cancelOrderId);
+        orderService.cancelOrder(user.getUserId(), cancelOrderId);
         placeOrder(productB, 2);
 
         // when
@@ -184,7 +184,7 @@ public class AdminStatsServiceTest {
         placeOrder(productA, 1);
         placeOrder(productB, 1);
         Long cancelId = placeOrder(productA, 1);
-        orderService.cancelOrder(cancelId);
+        orderService.cancelOrder(user.getUserId(), cancelId);
 
         // when
         List<OrderStatusStatResponse> stats = adminStatsService.getOrderStatusStat();

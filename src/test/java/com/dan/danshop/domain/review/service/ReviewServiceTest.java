@@ -142,7 +142,7 @@ public class ReviewServiceTest {
         // given - 주문 후 취소
         placeOrder();
         Long orderId = orderRepository.findAll().get(0).getId();
-        orderService.cancelOrder(orderId);
+        orderService.cancelOrder(user.getUserId(), orderId);
 
         // then - 취소 주문으로는 리뷰 불가
         assertThatThrownBy(() ->

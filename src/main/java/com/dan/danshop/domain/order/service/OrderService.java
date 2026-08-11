@@ -112,9 +112,8 @@ public class OrderService {
     }
 
     @Transactional
-    public void cancelOrder(Long orderId) {
+    public void cancelOrder(String userId, Long orderId) {
         //현재 로그인유저 조회
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         User curruntUser = userRepository.findByUserId(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
         //취소요청 주문 조회
@@ -153,15 +152,13 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public Page<OrderResponse> findOrderList(int page, int size) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public Page<OrderResponse> findOrderList(String userId, int page, int size) {
         PageRequest pageRequest = PageRequest.of(page, size);
         return orderRepository.findByUserIdString(userId, pageRequest).map(OrderResponse::from);
     }
 
     @Transactional
-    public void updateAddress(Long orderId, UpdateAddressRequest request) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public void updateAddress(String userId, Long orderId, UpdateAddressRequest request) {
         User currentUser = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
@@ -176,8 +173,7 @@ public class OrderService {
     }
 
     @Transactional(readOnly = true)
-    public OrderDetailResponse findOrder(Long orderId) {
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+    public OrderDetailResponse findOrder(String userId, Long orderId) {
         User currentUser = userRepository.findByUserId(userId)
                 .orElseThrow(() -> new BusinessException(USER_NOT_FOUND));
 
