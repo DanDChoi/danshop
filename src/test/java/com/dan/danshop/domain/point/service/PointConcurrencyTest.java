@@ -98,7 +98,7 @@ public class PointConcurrencyTest {
                             "12345", "서울시 강남구", "101호",
                             List.of(new OrderItemRequest(product.getId(), 1))
                     );
-                    orderService.createOrder(request);
+                    orderService.createOrder(user.getUserId(), request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();

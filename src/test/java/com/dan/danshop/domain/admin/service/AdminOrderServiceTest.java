@@ -79,7 +79,7 @@ public class AdminOrderServiceTest {
     }
 
     private Long placeOrder() {
-        return orderService.createOrder(new CreateRequest(
+        return orderService.createOrder(user.getUserId(), new CreateRequest(
                 null, null,
                 BigDecimal.valueOf(10000),
                 "12345", "서울시", "101호",

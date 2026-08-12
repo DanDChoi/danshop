@@ -85,7 +85,7 @@ public class OrderPointServiceTest {
         );
 
         // when
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
 
         // then - 500포인트(1%) 적립
         long balance = pointService.getBalance(user.getUserId());
@@ -116,7 +116,7 @@ public class OrderPointServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
 
         // then
         // 실결제금액: 49000원 (50000 - 1000)
@@ -148,7 +148,7 @@ public class OrderPointServiceTest {
         );
 
         // then
-        assertThatThrownBy(() -> orderService.createOrder(request))
+        assertThatThrownBy(() -> orderService.createOrder(user.getUserId(), request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("포인트가 부족합니다.");
 
@@ -164,7 +164,7 @@ public class OrderPointServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
         assertThat(pointService.getBalance(user.getUserId())).isEqualTo(500L);
 
         // when - 주문 취소
@@ -196,7 +196,7 @@ public class OrderPointServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
         // 주문 후 잔액: 2000 - 1000(사용) + 490(1% 적립) = 1490
         assertThat(pointService.getBalance(user.getUserId())).isEqualTo(1490L);
 

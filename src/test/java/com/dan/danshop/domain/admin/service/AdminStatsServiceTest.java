@@ -85,7 +85,7 @@ public class AdminStatsServiceTest {
     }
 
     private Long placeOrder(Product product, int quantity) {
-        return orderService.createOrder(new CreateRequest(
+        return orderService.createOrder(user.getUserId(), new CreateRequest(
                 null, null,
                 product.getPrice().multiply(BigDecimal.valueOf(quantity)),
                 "12345", "서울시", "101호",

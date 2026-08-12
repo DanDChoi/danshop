@@ -33,7 +33,8 @@ public class OrderController {
             content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<?> createOrder(@Valid @RequestBody CreateRequest createRequest) {
 
-        orderService.createOrder(createRequest);
+        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
+        orderService.createOrder(userId, createRequest);
 
         return ResponseEntity.status(HttpStatus.CREATED).body("주문 생성 완료");
     }

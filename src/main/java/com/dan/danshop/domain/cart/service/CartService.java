@@ -121,7 +121,7 @@ public class CartService {
                 items
         );
 
-        Long orderId = orderService.createOrder(createRequest);
+        Long orderId = orderService.createOrder(userId, createRequest);
         clearCart(userId);
         return orderId;
     }

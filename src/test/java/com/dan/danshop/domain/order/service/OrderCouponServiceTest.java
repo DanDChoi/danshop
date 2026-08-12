@@ -107,7 +107,7 @@ public class OrderCouponServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
 
         // then - 실결제금액 45000원
         Order order = orderRepository.findById(orderId).orElseThrow();
@@ -139,7 +139,7 @@ public class OrderCouponServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder(user.getUserId(), request);
 
         // then - 실결제금액 45000원 (50000 * 0.9)
         Order order = orderRepository.findById(orderId).orElseThrow();
@@ -173,7 +173,7 @@ public class OrderCouponServiceTest {
         );
 
         // then - 최소 주문금액 미충족 예외
-        assertThatThrownBy(() -> orderService.createOrder(request))
+        assertThatThrownBy(() -> orderService.createOrder(user.getUserId(), request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("최소 주문금액을 충족하지 않습니다.");
 
@@ -202,7 +202,7 @@ public class OrderCouponServiceTest {
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        orderService.createOrder(firstRequest);
+        orderService.createOrder(user.getUserId(), firstRequest);
 
         // when - 동일 쿠폰으로 두 번째 주문 시도
         CreateRequest secondRequest = new CreateRequest(
@@ -214,7 +214,7 @@ public class OrderCouponServiceTest {
         );
 
         // then - 이미 사용된 쿠폰 예외
-        assertThatThrownBy(() -> orderService.createOrder(secondRequest))
+        assertThatThrownBy(() -> orderService.createOrder(user.getUserId(), secondRequest))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("이미 사용된 쿠폰입니다.");
 
@@ -246,7 +246,7 @@ public class OrderCouponServiceTest {
         );
 
         // then - 만료 쿠폰 예외
-        assertThatThrownBy(() -> orderService.createOrder(request))
+        assertThatThrownBy(() -> orderService.createOrder(user.getUserId(), request))
                 .isInstanceOf(BusinessException.class)
                 .hasMessageContaining("만료된 쿠폰입니다.");
 
@@ -268,7 +268,7 @@ public class OrderCouponServiceTest {
         couponService.createCoupon(coupon);
         couponService.issueCoupon(coupon.getId(), user.getUserId());
 
-        Long orderId = orderService.createOrder(new CreateRequest(
+        Long orderId = orderService.createOrder(user.getUserId(), new CreateRequest(
                 coupon.getId(), null,
                 BigDecimal.valueOf(50000),
                 "12345", "서울시 강남구", "101호",
