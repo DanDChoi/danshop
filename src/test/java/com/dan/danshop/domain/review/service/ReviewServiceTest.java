@@ -78,7 +78,7 @@ public class ReviewServiceTest {
     }
 
     private void placeOrder() {
-        orderService.createOrder(new CreateRequest(
+        orderService.createOrder(user.getUserId(), new CreateRequest(
                 null, null,
                 BigDecimal.valueOf(30000),
                 "12345", "서울시 강남구", "101호",
@@ -204,7 +204,7 @@ public class ReviewServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken(user2.getUserId(), null, List.of())
         );
-        orderService.createOrder(new CreateRequest(
+        orderService.createOrder(user2.getUserId(), new CreateRequest(
                 null, null, BigDecimal.valueOf(30000),
                 "12345", "서울시", "102호",
                 List.of(new OrderItemRequest(product.getId(), 1))

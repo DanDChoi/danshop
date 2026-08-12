@@ -24,7 +24,6 @@ import com.dan.danshop.global.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,9 +48,8 @@ public class OrderService {
     private final NotificationService notificationService;
 
     @Transactional
-    public Long createOrder(CreateRequest createRequest) {
+    public Long createOrder(String userId, CreateRequest createRequest) {
 
-        String userId = SecurityContextHolder.getContext().getAuthentication().getName();
         // 포인트 사용 시 동시 차감 방지를 위해 비관적 락으로 유저 조회
         User curruntUser = (createRequest.getUsePoints() != null && createRequest.getUsePoints() > 0)
                 ? userRepository.findByUserIdWithLock(userId).orElseThrow(() -> new BusinessException(USER_NOT_FOUND))

@@ -98,7 +98,7 @@ public class OrderServiceTest {
                         List.of(new OrderItemRequest(product.getId(), 1))
                 );
                 try {
-                    orderService.createOrder(request);
+                    orderService.createOrder("testuser", request);
                     successCount.incrementAndGet();
                 } catch (Exception e) {
                     failCount.incrementAndGet();
@@ -147,7 +147,7 @@ public class OrderServiceTest {
                 "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
         );
-        Long orderId = orderService.createOrder(request);
+        Long orderId = orderService.createOrder("testuser", request);
 
         int stock = productRepository.findById(product.getId()).get().getStock();
 
@@ -172,7 +172,7 @@ public class OrderServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("addruser", null, List.of())
         );
-        Long orderId = orderService.createOrder(new CreateRequest(
+        Long orderId = orderService.createOrder("addruser", new CreateRequest(
                 null, null, BigDecimal.valueOf(10000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -202,7 +202,7 @@ public class OrderServiceTest {
         SecurityContextHolder.getContext().setAuthentication(
                 new UsernamePasswordAuthenticationToken("addruser2", null, List.of())
         );
-        Long orderId = orderService.createOrder(new CreateRequest(
+        Long orderId = orderService.createOrder("addruser2", new CreateRequest(
                 null, null, BigDecimal.valueOf(10000),
                 "12345", "서울시 강남구", "101호",
                 List.of(new OrderItemRequest(product.getId(), 1))
@@ -255,7 +255,7 @@ public class OrderServiceTest {
                     "101호",
                     List.of(new OrderItemRequest(product.getId(), 1))
             );
-            Long orderId = orderService.createOrder(request);
+            Long orderId = orderService.createOrder(user.getUserId(), request);
         }
 
         QueryCountHolder.clear();
