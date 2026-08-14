@@ -2,6 +2,7 @@ package com.dan.danshop.domain.order.service;
 
 import com.dan.danshop.DataSourceProxyConfig;
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.GuestOrderRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.dto.UpdateAddressRequest;
 import com.dan.danshop.domain.order.entity.Order;
@@ -267,5 +268,33 @@ public class OrderServiceTest {
         System.out.println("INSERT: " + count.getInsert());
         System.out.println("UPDATE: " + count.getUpdate());
         System.out.println("전체: " + count.getTotal());
+    }
+
+    @Test
+    void 게스트_주문_생성시_재고가_감소하고_주문자_정보가_저장된다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("게스트테스트상품").price(BigDecimal.valueOf(10000)).stock(10).build());
+
+        GuestOrderRequest request = new GuestOrderRequest(
+                "홍길동", "guest@test.com", "010-1234-5678",
+                BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 2))
+        );
+
+        Long orderId = orderService.createGuestOrder(request);
+
+        Order savedOrder = orderRepository.findById(orderId).orElseThrow();
+        Product updatedProduct = productRepository.findById(product.getId()).orElseThrow();
+
+        assertThat(savedOrder.getUser()).isNull();
+        assertThat(savedOrder.getOrderer().getName()).isEqualTo("홍길동");
+        assertThat(savedOrder.getOrderer().getEmail()).isEqualTo("guest@test.com");
+        assertThat(savedOrder.getOrderer().getPhone()).isEqualTo("010-1234-5678");
+        assertThat(savedOrder.getStatus()).isEqualTo(OrderStatus.PENDING);
+        assertThat(updatedProduct.getStock()).isEqualTo(8);
+        assertThat(pointHistoryRepository.findAll()).isEmpty();
+
+        System.out.println("게스트 주문 생성 완료: " + savedOrder.getOrderer().getName() + ", 남은 재고: " + updatedProduct.getStock());
     }
 }
