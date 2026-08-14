@@ -1,6 +1,7 @@
 package com.dan.danshop.domain.order.entity;
 
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.GuestOrderRequest;
 import com.dan.danshop.domain.user.entity.User;
 import com.dan.danshop.global.common.BaseEntity;
 import com.dan.danshop.global.exception.BusinessException;
@@ -50,6 +51,21 @@ public class Order extends BaseEntity {
                 .baseAddr(createRequest.getBaseAddr())
                 .detailAddr(createRequest.getDetailAddr())
                 .user(user)
+                .build();
+    }
+
+    public static Order fromGuest(GuestOrderRequest guestOrderRequest, BigDecimal payAmount) {
+        return Order.builder()
+                .status(OrderStatus.PENDING)
+                .payAmount(payAmount)
+                .postNo(guestOrderRequest.getPostNo())
+                .baseAddr(guestOrderRequest.getBaseAddr())
+                .detailAddr(guestOrderRequest.getDetailAddr())
+                .orderer(new Orderer(
+                        guestOrderRequest.getOrdererName(),
+                        guestOrderRequest.getOrdererEmail(),
+                        guestOrderRequest.getOrdererPhone()
+                ))
                 .build();
     }
 

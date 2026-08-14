@@ -5,6 +5,7 @@ import com.dan.danshop.domain.coupon.entity.DiscountType;
 import com.dan.danshop.domain.coupon.entity.UserCoupon;
 import com.dan.danshop.domain.coupon.repository.UserCouponRepository;
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.GuestOrderRequest;
 import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.dto.OrderResponse;
@@ -83,13 +84,7 @@ public class OrderService {
 
         Order newOrder = Order.from(createRequest, curruntUser, payAmount);
 
-        List<OrderItem> itemRequests = new ArrayList<>();
-        for (OrderItemRequest itemRequest : createRequest.getItems()) {
-            Product product = productRepository.findByIdWithLock(itemRequest.getProductId()).orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
-            product.decreaseStock(itemRequest.getQuantity());
-            OrderItem orderItem = OrderItem.from(newOrder, product, itemRequest.getQuantity());
-            itemRequests.add(orderItem);
-        }
+        List<OrderItem> itemRequests = decreaseStockAndBuildItems(newOrder, createRequest.getItems());
 
         orderRepository.save(newOrder);
         orderItemRepository.saveAll(itemRequests);
@@ -107,6 +102,28 @@ public class OrderService {
         ));
 
         return newOrder.getId();
+    }
+
+    @Transactional
+    public Long createGuestOrder(GuestOrderRequest guestOrderRequest) {
+        Order newOrder = Order.fromGuest(guestOrderRequest, guestOrderRequest.getPayAmount());
+
+        List<OrderItem> orderItems = decreaseStockAndBuildItems(newOrder, guestOrderRequest.getItems());
+
+        orderRepository.save(newOrder);
+        orderItemRepository.saveAll(orderItems);
+
+        return newOrder.getId();
+    }
+
+    private List<OrderItem> decreaseStockAndBuildItems(Order order, List<OrderItemRequest> itemRequests) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        for (OrderItemRequest itemRequest : itemRequests) {
+            Product product = productRepository.findByIdWithLock(itemRequest.getProductId()).orElseThrow(() -> new BusinessException(PRODUCT_NOT_FOUND));
+            product.decreaseStock(itemRequest.getQuantity());
+            orderItems.add(OrderItem.from(order, product, itemRequest.getQuantity()));
+        }
+        return orderItems;
     }
 
     @Transactional
