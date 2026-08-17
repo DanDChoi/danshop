@@ -202,4 +202,17 @@ public class OrderService {
         List<OrderItem> items = orderItemRepository.findByOrder(order);
         return OrderDetailResponse.from(order, items);
     }
+
+    @Transactional(readOnly = true)
+    public OrderDetailResponse findGuestOrder(Long orderId, String email) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new BusinessException(ORDER_NOT_FOUND));
+
+        if (order.getOrderer() == null || !order.getOrderer().getEmail().equals(email)) {
+            throw new BusinessException(ORDER_NOT_FOUND);
+        }
+
+        List<OrderItem> items = orderItemRepository.findByOrder(order);
+        return OrderDetailResponse.from(order, items);
+    }
 }

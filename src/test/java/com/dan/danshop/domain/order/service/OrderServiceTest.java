@@ -297,4 +297,59 @@ public class OrderServiceTest {
 
         System.out.println("게스트 주문 생성 완료: " + savedOrder.getOrderer().getName() + ", 남은 재고: " + updatedProduct.getStock());
     }
+
+    @Test
+    void 게스트_주문_조회시_이메일이_일치하면_조회된다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("게스트조회상품").price(BigDecimal.valueOf(10000)).stock(10).build());
+
+        Long orderId = orderService.createGuestOrder(new GuestOrderRequest(
+                "홍길동", "guest2@test.com", "010-1234-5678",
+                BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        var response = orderService.findGuestOrder(orderId, "guest2@test.com");
+
+        assertThat(response.getOrderId()).isEqualTo(orderId);
+        assertThat(response.getStatus()).isEqualTo(OrderStatus.PENDING);
+    }
+
+    @Test
+    void 게스트_주문_조회시_이메일이_불일치하면_예외가_발생한다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("게스트조회상품2").price(BigDecimal.valueOf(10000)).stock(10).build());
+
+        Long orderId = orderService.createGuestOrder(new GuestOrderRequest(
+                "홍길동", "guest3@test.com", "010-1234-5678",
+                BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        assertThatThrownBy(() -> orderService.findGuestOrder(orderId, "wrong@test.com"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("주문을 찾을 수 없습니다.");
+    }
+
+    @Test
+    void 회원_주문을_게스트_이메일로_조회할_수_없다() {
+        Product product = productRepository.save(Product.builder()
+                .productName("회원주문상품").price(BigDecimal.valueOf(10000)).stock(10).build());
+        User user = userRepository.save(User.builder().userId("memberuser").build());
+
+        SecurityContextHolder.getContext().setAuthentication(
+                new UsernamePasswordAuthenticationToken("memberuser", null, List.of())
+        );
+        Long orderId = orderService.createOrder("memberuser", new CreateRequest(
+                null, null, BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        ));
+
+        assertThatThrownBy(() -> orderService.findGuestOrder(orderId, "anything@test.com"))
+                .isInstanceOf(BusinessException.class)
+                .hasMessageContaining("주문을 찾을 수 없습니다.");
+    }
 }
