@@ -1,5 +1,6 @@
 package com.dan.danshop.domain.order.controller;
 
+import com.dan.danshop.domain.order.dto.GuestOrderLookupRequest;
 import com.dan.danshop.domain.order.dto.GuestOrderRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.repository.OrderItemRepository;
@@ -83,5 +84,52 @@ public class GuestOrderControllerTest {
                         .contentType("application/json")
                         .content(objectMapper.writeValueAsString(request)))
                 .andExpect(status().isBadRequest());
+    }
+
+    @Test
+    void 토큰없이_이메일이_일치하면_게스트_주문을_조회한다() throws Exception {
+        GuestOrderRequest createRequest = new GuestOrderRequest(
+                "홍길동", "lookup@test.com", "010-1234-5678",
+                BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        );
+        String createResult = mockMvc.perform(post("/guest/orders")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long orderId = objectMapper.readTree(createResult).get("orderId").asLong();
+
+        GuestOrderLookupRequest lookupRequest = new GuestOrderLookupRequest(orderId, "lookup@test.com");
+
+        mockMvc.perform(post("/guest/orders/lookup")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(lookupRequest)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.orderId").value(orderId));
+    }
+
+    @Test
+    void 이메일이_불일치하면_404를_반환한다() throws Exception {
+        GuestOrderRequest createRequest = new GuestOrderRequest(
+                "홍길동", "owner@test.com", "010-1234-5678",
+                BigDecimal.valueOf(10000),
+                "12345", "서울시 강남구", "101호",
+                List.of(new OrderItemRequest(product.getId(), 1))
+        );
+        String createResult = mockMvc.perform(post("/guest/orders")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(createRequest)))
+                .andExpect(status().isCreated())
+                .andReturn().getResponse().getContentAsString();
+        Long orderId = objectMapper.readTree(createResult).get("orderId").asLong();
+
+        GuestOrderLookupRequest lookupRequest = new GuestOrderLookupRequest(orderId, "stranger@test.com");
+
+        mockMvc.perform(post("/guest/orders/lookup")
+                        .contentType("application/json")
+                        .content(objectMapper.writeValueAsString(lookupRequest)))
+                .andExpect(status().isNotFound());
     }
 }

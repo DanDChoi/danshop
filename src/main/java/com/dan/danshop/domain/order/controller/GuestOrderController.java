@@ -1,6 +1,8 @@
 package com.dan.danshop.domain.order.controller;
 
+import com.dan.danshop.domain.order.dto.GuestOrderLookupRequest;
 import com.dan.danshop.domain.order.dto.GuestOrderRequest;
+import com.dan.danshop.domain.order.dto.OrderDetailResponse;
 import com.dan.danshop.domain.order.service.OrderService;
 import com.dan.danshop.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,5 +37,14 @@ public class GuestOrderController {
     public ResponseEntity<Map<String, Long>> createGuestOrder(@Valid @RequestBody GuestOrderRequest request) {
         Long orderId = orderService.createGuestOrder(request);
         return ResponseEntity.status(HttpStatus.CREATED).body(Map.of("orderId", orderId));
+    }
+
+    @PostMapping("/lookup")
+    @Operation(summary = "비회원 주문 조회 (주문번호 + 이메일)")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "404", description = "주문 없음 또는 이메일 불일치",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    public ResponseEntity<OrderDetailResponse> lookupGuestOrder(@Valid @RequestBody GuestOrderLookupRequest request) {
+        return ResponseEntity.ok(orderService.findGuestOrder(request.getOrderId(), request.getEmail()));
     }
 }
