@@ -34,6 +34,7 @@ public class SecurityConfig {
                     .requestMatchers("/user/signup", "/user/login", "/user/refresh", "/swagger-ui/**", "/v3/api-docs","/v3/api-docs/**", "/swagger-resources/**", "/actuator/health").permitAll()
                     .requestMatchers(HttpMethod.GET, "/product", "/product/{productNo}", "/product/scroll").permitAll()
                     .requestMatchers(HttpMethod.POST, "/guest/orders", "/guest/orders/lookup").permitAll()
+                    .requestMatchers("/cart/**").permitAll()
                     .requestMatchers("/admin/**").hasRole("ADMIN")
                     .anyRequest().authenticated())
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
