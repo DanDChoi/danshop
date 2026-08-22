@@ -20,4 +20,9 @@ public class CartCheckoutRequest {
 
     @NotBlank
     private String detailAddr;
+
+    // 비회원 checkout에서만 사용. 회원은 무시됨.
+    private String ordererName;
+    private String ordererEmail;
+    private String ordererPhone;
 }

@@ -4,6 +4,7 @@ import com.dan.danshop.domain.cart.dto.CartCheckoutRequest;
 import com.dan.danshop.domain.cart.dto.CartItem;
 import com.dan.danshop.domain.cart.dto.CartResponse;
 import com.dan.danshop.domain.order.dto.CreateRequest;
+import com.dan.danshop.domain.order.dto.GuestOrderRequest;
 import com.dan.danshop.domain.order.dto.OrderItemRequest;
 import com.dan.danshop.domain.order.service.OrderService;
 import com.dan.danshop.domain.product.entity.Product;
@@ -36,6 +37,7 @@ public class CartService {
     }
 
     private static final String CART_KEY_PREFIX = "cart:";
+    public static final String GUEST_KEY_PREFIX = "guest:";
 
     private String cartKey(String userId) {
         return CART_KEY_PREFIX + userId;
@@ -101,8 +103,8 @@ public class CartService {
         redisTemplate.delete(cartKey(userId));
     }
 
-    public Long checkout(String userId, CartCheckoutRequest request) {
-        CartResponse cart = getCart(userId);
+    public Long checkout(String identifier, CartCheckoutRequest request) {
+        CartResponse cart = getCart(identifier);
         if (cart.getItems().isEmpty()) {
             throw new BusinessException(CART_ITEM_NOT_FOUND);
         }
@@ -111,18 +113,39 @@ public class CartService {
                 .map(item -> new OrderItemRequest(item.getProductId(), item.getQuantity()))
                 .toList();
 
-        CreateRequest createRequest = new CreateRequest(
-                request.getCouponId(),
-                request.getUsePoints(),
-                cart.getTotalAmount(),
+        Long orderId = identifier.startsWith(GUEST_KEY_PREFIX)
+                ? orderService.createGuestOrder(toGuestOrderRequest(request, cart.getTotalAmount(), items))
+                : orderService.createOrder(identifier, new CreateRequest(
+                        request.getCouponId(),
+                        request.getUsePoints(),
+                        cart.getTotalAmount(),
+                        request.getPostNo(),
+                        request.getBaseAddr(),
+                        request.getDetailAddr(),
+                        items
+                ));
+
+        clearCart(identifier);
+        return orderId;
+    }
+
+    private GuestOrderRequest toGuestOrderRequest(CartCheckoutRequest request, BigDecimal payAmount, List<OrderItemRequest> items) {
+        if (isBlank(request.getOrdererName()) || isBlank(request.getOrdererEmail()) || isBlank(request.getOrdererPhone())) {
+            throw new BusinessException(ORDERER_INFO_REQUIRED);
+        }
+        return new GuestOrderRequest(
+                request.getOrdererName(),
+                request.getOrdererEmail(),
+                request.getOrdererPhone(),
+                payAmount,
                 request.getPostNo(),
                 request.getBaseAddr(),
                 request.getDetailAddr(),
                 items
         );
+    }
 
-        Long orderId = orderService.createOrder(userId, createRequest);
-        clearCart(userId);
-        return orderId;
+    private boolean isBlank(String value) {
+        return value == null || value.isBlank();
     }
 }
