@@ -37,6 +37,7 @@ public enum ErrorCode {
     // Cart
     CART_ITEM_NOT_FOUND(HttpStatus.NOT_FOUND, "장바구니에 존재하지 않는 상품입니다."),
     GUEST_TOKEN_REQUIRED(HttpStatus.BAD_REQUEST, "비회원은 X-Guest-Token 헤더가 필요합니다."),
+    ORDERER_INFO_REQUIRED(HttpStatus.BAD_REQUEST, "비회원 주문은 주문자 이름/이메일/연락처가 필요합니다."),
 
     // Point
     INSUFFICIENT_POINTS(HttpStatus.BAD_REQUEST, "포인트가 부족합니다."),

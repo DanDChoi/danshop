@@ -26,7 +26,6 @@ import static com.dan.danshop.global.exception.ErrorCode.GUEST_TOKEN_REQUIRED;
 public class CartController {
 
     private static final String GUEST_TOKEN_HEADER = "X-Guest-Token";
-    private static final String GUEST_KEY_PREFIX = "guest:";
 
     private final CartService cartService;
 
@@ -97,6 +96,6 @@ public class CartController {
         if (guestToken == null || guestToken.isBlank()) {
             throw new BusinessException(GUEST_TOKEN_REQUIRED);
         }
-        return GUEST_KEY_PREFIX + guestToken;
+        return CartService.GUEST_KEY_PREFIX + guestToken;
     }
 }
