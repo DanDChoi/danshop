@@ -4,7 +4,11 @@ import com.dan.danshop.domain.cart.dto.CartCheckoutRequest;
 import com.dan.danshop.domain.cart.dto.CartResponse;
 import com.dan.danshop.domain.cart.service.CartService;
 import com.dan.danshop.global.exception.BusinessException;
+import com.dan.danshop.global.exception.ErrorResponse;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.media.Content;
+import io.swagger.v3.oas.annotations.media.Schema;
+import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
@@ -22,7 +26,7 @@ import static com.dan.danshop.global.exception.ErrorCode.GUEST_TOKEN_REQUIRED;
 @RestController
 @RequiredArgsConstructor
 @RequestMapping("/cart")
-@Tag(name = "Cart", description = "장바구니 API")
+@Tag(name = "Cart", description = "장바구니 API (비회원은 X-Guest-Token 헤더로 이용 가능)")
 public class CartController {
 
     private static final String GUEST_TOKEN_HEADER = "X-Guest-Token";
@@ -31,6 +35,9 @@ public class CartController {
 
     @PostMapping("/{productId}")
     @Operation(summary = "장바구니 상품 추가")
+    @ApiResponse(responseCode = "200", description = "추가 성공")
+    @ApiResponse(responseCode = "400", description = "비회원인데 X-Guest-Token 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<String> addToCart(@PathVariable Long productId,
                                             @RequestParam(defaultValue = "1") int quantity,
                                             @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
@@ -41,6 +48,9 @@ public class CartController {
 
     @GetMapping
     @Operation(summary = "장바구니 조회")
+    @ApiResponse(responseCode = "200", description = "조회 성공")
+    @ApiResponse(responseCode = "400", description = "비회원인데 X-Guest-Token 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<CartResponse> getCart(
             @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
         String cartKey = resolveCartKey(guestToken);
@@ -49,6 +59,11 @@ public class CartController {
 
     @PatchMapping("/{productId}")
     @Operation(summary = "장바구니 수량 변경")
+    @ApiResponse(responseCode = "200", description = "변경 성공")
+    @ApiResponse(responseCode = "400", description = "비회원인데 X-Guest-Token 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "장바구니에 없는 상품",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<String> updateQuantity(@PathVariable Long productId,
                                                  @RequestParam int quantity,
                                                  @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
@@ -59,6 +74,9 @@ public class CartController {
 
     @DeleteMapping("/{productId}")
     @Operation(summary = "장바구니 상품 삭제")
+    @ApiResponse(responseCode = "200", description = "삭제 성공")
+    @ApiResponse(responseCode = "400", description = "비회원인데 X-Guest-Token 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<String> removeFromCart(@PathVariable Long productId,
                                                  @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
         String cartKey = resolveCartKey(guestToken);
@@ -68,6 +86,9 @@ public class CartController {
 
     @DeleteMapping
     @Operation(summary = "장바구니 전체 비우기")
+    @ApiResponse(responseCode = "200", description = "비우기 성공")
+    @ApiResponse(responseCode = "400", description = "비회원인데 X-Guest-Token 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<String> clearCart(
             @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
         String cartKey = resolveCartKey(guestToken);
@@ -76,7 +97,12 @@ public class CartController {
     }
 
     @PostMapping("/checkout")
-    @Operation(summary = "장바구니 바로 주문")
+    @Operation(summary = "장바구니 바로 주문 (비회원은 ordererName/Email/Phone 필수)")
+    @ApiResponse(responseCode = "201", description = "주문 생성 성공")
+    @ApiResponse(responseCode = "400", description = "X-Guest-Token 누락 또는 비회원 주문자 정보 누락",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
+    @ApiResponse(responseCode = "404", description = "장바구니가 비어있음",
+            content = @Content(schema = @Schema(implementation = ErrorResponse.class)))
     public ResponseEntity<Map<String, Long>> checkout(@Valid @RequestBody CartCheckoutRequest request,
                                                        @RequestHeader(value = GUEST_TOKEN_HEADER, required = false) String guestToken) {
         String cartKey = resolveCartKey(guestToken);
