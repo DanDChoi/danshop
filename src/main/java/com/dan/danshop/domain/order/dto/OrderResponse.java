@@ -14,6 +14,7 @@ import java.math.BigDecimal;
 @NoArgsConstructor
 @AllArgsConstructor
 public class OrderResponse {
+    private Long orderId;
     private OrderStatus status;
     private BigDecimal payAmount;
     private String postNo;
@@ -23,6 +24,7 @@ public class OrderResponse {
 
     public static OrderResponse from(Order order) {
         return OrderResponse.builder()
+                .orderId(order.getId())
                 .status(order.getStatus())
                 .payAmount(order.getPayAmount())
                 .postNo(order.getPostNo())
