@@ -13,7 +13,13 @@ export default function Navbar() {
           Danshop
         </Link>
 
-        <nav className="flex items-center gap-3">
+        <nav className="flex items-center gap-4">
+          <Link
+            href="/products"
+            className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            상품
+          </Link>
           {userId ? (
             <>
               <span className="text-sm text-gray-500">{userId}님</span>
