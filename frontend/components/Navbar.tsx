@@ -20,6 +20,12 @@ export default function Navbar() {
           >
             상품
           </Link>
+          <Link
+            href="/cart"
+            className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+          >
+            장바구니
+          </Link>
           {userId ? (
             <>
               <span className="text-sm text-gray-500">{userId}님</span>
