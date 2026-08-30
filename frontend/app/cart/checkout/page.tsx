@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, FormEvent } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
-import { checkoutCart, ApiError, type Identity } from "@/lib/api";
+import { getCart, checkoutCart, ApiError, type Cart, type Identity } from "@/lib/api";
 
 function resolveIdentity(accessToken: string | null): Identity {
   return accessToken ? { token: accessToken } : { guestToken: getOrCreateGuestToken() };
@@ -24,6 +24,27 @@ export default function CheckoutPage() {
   const [error, setError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState<{ orderId: number } | null>(null);
+
+  const [cart, setCart] = useState<Cart | null>(null);
+  const [cartError, setCartError] = useState("");
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getCart(resolveIdentity(accessToken))
+      .then((data) => {
+        if (cancelled) return;
+        setCart(data);
+      })
+      .catch((err) => {
+        if (cancelled) return;
+        setCartError(err instanceof ApiError ? err.message : "장바구니를 불러오지 못했습니다.");
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -58,6 +79,34 @@ export default function CheckoutPage() {
         )}
         <Link href="/products" className="text-sm font-medium text-gray-900 hover:underline">
           쇼핑 계속하기
+        </Link>
+      </main>
+    );
+  }
+
+  if (cartError) {
+    return (
+      <main className="max-w-sm mx-auto px-4 py-16">
+        <p className="text-sm text-red-500">{cartError}</p>
+      </main>
+    );
+  }
+
+  if (!cart) {
+    return (
+      <main className="max-w-sm mx-auto px-4 py-16">
+        <p className="text-sm text-gray-400">불러오는 중...</p>
+      </main>
+    );
+  }
+
+  if (cart.items.length === 0) {
+    return (
+      <main className="max-w-sm mx-auto px-4 py-16 text-center">
+        <h1 className="text-2xl font-bold text-gray-900 mb-4">주문하기</h1>
+        <p className="text-sm text-gray-400 mb-6">장바구니가 비어있어 주문할 수 없습니다.</p>
+        <Link href="/products" className="text-sm font-medium text-gray-900 hover:underline">
+          상품 보러가기
         </Link>
       </main>
     );
