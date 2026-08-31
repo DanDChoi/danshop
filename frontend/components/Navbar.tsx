@@ -28,6 +28,12 @@ export default function Navbar() {
           </Link>
           {userId ? (
             <>
+              <Link
+                href="/orders"
+                className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                주문내역
+              </Link>
               <span className="text-sm text-gray-500">{userId}님</span>
               <button
                 onClick={logout}
