@@ -77,9 +77,19 @@ export default function CheckoutPage() {
             이 주문번호와 입력하신 이메일로 나중에 주문을 조회할 수 있습니다.
           </p>
         )}
-        <Link href="/products" className="text-sm font-medium text-gray-900 hover:underline">
-          쇼핑 계속하기
-        </Link>
+        <div className="flex flex-col items-center gap-3">
+          {!isGuest && (
+            <Link
+              href={`/orders/${result.orderId}`}
+              className="w-full rounded-lg bg-gray-900 text-white text-sm font-medium py-2.5 hover:bg-gray-700 transition-colors"
+            >
+              주문 상세 보기
+            </Link>
+          )}
+          <Link href="/products" className="text-sm font-medium text-gray-900 hover:underline">
+            쇼핑 계속하기
+          </Link>
+        </div>
       </main>
     );
   }

@@ -3,18 +3,11 @@
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getOrders, ApiError, type OrderStatus, type OrderSummary } from "@/lib/api";
+import { getOrders, ApiError, type OrderSummary } from "@/lib/api";
+import { ORDER_STATUS_LABELS } from "@/lib/order";
 import { useAuth } from "@/lib/auth-context";
 
 const PAGE_SIZE = 10;
-
-const STATUS_LABELS: Record<OrderStatus, string> = {
-  PENDING: "결제 대기",
-  PAID: "결제 완료",
-  SHIPPED: "배송 중",
-  DELIVERED: "배송 완료",
-  CANCELLED: "취소됨",
-};
 
 export default function OrdersPage() {
   return (
@@ -93,9 +86,10 @@ function OrdersList({ page }: { page: number }) {
       ) : (
         <div className="flex flex-col gap-3">
           {orders.map((order) => (
-            <div
+            <Link
               key={order.orderId}
-              className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-4"
+              href={`/orders/${order.orderId}`}
+              className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
             >
               <div className="min-w-0">
                 <p className="text-sm font-semibold text-gray-900">주문번호 {order.orderId}</p>
@@ -107,9 +101,9 @@ function OrdersList({ page }: { page: number }) {
                 <p className="text-sm font-medium text-gray-900">
                   {order.payAmount.toLocaleString()}원
                 </p>
-                <span className="text-xs text-gray-400">{STATUS_LABELS[order.status]}</span>
+                <span className="text-xs text-gray-400">{ORDER_STATUS_LABELS[order.status]}</span>
               </div>
-            </div>
+            </Link>
           ))}
         </div>
       )}
