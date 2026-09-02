@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, ApiError, type OrderDetail } from "@/lib/api";
+import { getOrder, cancelOrder, ApiError, type OrderDetail } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
 import { useAuth } from "@/lib/auth-context";
 
@@ -20,6 +20,9 @@ function OrderDetailView({ orderId }: { orderId: number }) {
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState("");
+
+  const [cancelState, setCancelState] = useState<"idle" | "confirm" | "loading">("idle");
+  const [cancelError, setCancelError] = useState("");
 
   useEffect(() => {
     if (!accessToken) {
@@ -43,6 +46,21 @@ function OrderDetailView({ orderId }: { orderId: number }) {
       cancelled = true;
     };
   }, [accessToken, orderId, router]);
+
+  const handleCancel = async () => {
+    if (!accessToken) return;
+    setCancelState("loading");
+    setCancelError("");
+    try {
+      await cancelOrder(accessToken, orderId);
+      const refreshed = await getOrder(accessToken, orderId);
+      setOrder(refreshed);
+      setCancelState("idle");
+    } catch (err) {
+      setCancelError(err instanceof ApiError ? err.message : "주문 취소에 실패했습니다.");
+      setCancelState("confirm");
+    }
+  };
 
   if (!accessToken) {
     return (
@@ -117,6 +135,43 @@ function OrderDetailView({ orderId }: { orderId: number }) {
           </span>
         </div>
       </div>
+
+      {order.status === "PENDING" && (
+        <div className="border-t border-gray-100 pt-4">
+          {cancelState === "idle" ? (
+            <button
+              onClick={() => {
+                setCancelError("");
+                setCancelState("confirm");
+              }}
+              className="text-sm text-gray-400 hover:text-red-500 transition-colors"
+            >
+              주문 취소
+            </button>
+          ) : (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-gray-700">정말 이 주문을 취소하시겠습니까?</p>
+              {cancelError && <p className="text-sm text-red-500">{cancelError}</p>}
+              <div className="flex gap-2">
+                <button
+                  onClick={handleCancel}
+                  disabled={cancelState === "loading"}
+                  className="rounded-lg bg-red-500 text-white text-sm font-medium px-4 py-2 hover:bg-red-600 transition-colors disabled:opacity-50"
+                >
+                  {cancelState === "loading" ? "취소 중..." : "취소하기"}
+                </button>
+                <button
+                  onClick={() => setCancelState("idle")}
+                  disabled={cancelState === "loading"}
+                  className="rounded-lg border border-gray-200 text-sm font-medium px-4 py-2 hover:border-gray-400 transition-colors disabled:opacity-50"
+                >
+                  닫기
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </main>
   );
 }
