@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { getOrder, cancelOrder, ApiError, type OrderDetail } from "@/lib/api";
+import {
+  getOrder,
+  cancelOrder,
+  updateOrderAddress,
+  ApiError,
+  type OrderDetail,
+} from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
 import { useAuth } from "@/lib/auth-context";
 
@@ -23,6 +29,12 @@ function OrderDetailView({ orderId }: { orderId: number }) {
 
   const [cancelState, setCancelState] = useState<"idle" | "confirm" | "loading">("idle");
   const [cancelError, setCancelError] = useState("");
+
+  const [addrState, setAddrState] = useState<"idle" | "editing" | "loading">("idle");
+  const [addrError, setAddrError] = useState("");
+  const [postNo, setPostNo] = useState("");
+  const [baseAddr, setBaseAddr] = useState("");
+  const [detailAddr, setDetailAddr] = useState("");
 
   useEffect(() => {
     if (!accessToken) {
@@ -62,6 +74,31 @@ function OrderDetailView({ orderId }: { orderId: number }) {
     }
   };
 
+  const startAddressEdit = () => {
+    if (!order) return;
+    setPostNo(order.postNo);
+    setBaseAddr(order.baseAddr);
+    setDetailAddr(order.detailAddr);
+    setAddrError("");
+    setAddrState("editing");
+  };
+
+  const handleAddressSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    if (!accessToken) return;
+    setAddrState("loading");
+    setAddrError("");
+    try {
+      await updateOrderAddress(accessToken, orderId, { postNo, baseAddr, detailAddr });
+      const refreshed = await getOrder(accessToken, orderId);
+      setOrder(refreshed);
+      setAddrState("idle");
+    } catch (err) {
+      setAddrError(err instanceof ApiError ? err.message : "배송지 변경에 실패했습니다.");
+      setAddrState("editing");
+    }
+  };
+
   if (!accessToken) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
@@ -88,6 +125,10 @@ function OrderDetailView({ orderId }: { orderId: number }) {
       </main>
     );
   }
+
+  const isPending = order.status === "PENDING";
+  const inputClass =
+    "w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900";
 
   return (
     <main className="max-w-2xl mx-auto px-4 md:px-6 py-12 md:py-16">
@@ -121,13 +162,69 @@ function OrderDetailView({ orderId }: { orderId: number }) {
         ))}
       </div>
 
-      <div className="border-t border-gray-100 pt-4 mb-8 space-y-2">
-        <div className="flex justify-between text-sm">
-          <span className="text-gray-500">배송지</span>
-          <span className="text-gray-900 text-right">
-            ({order.postNo}) {order.baseAddr} {order.detailAddr}
-          </span>
-        </div>
+      <div className="border-t border-gray-100 pt-4 mb-8 space-y-3">
+        {addrState === "editing" || addrState === "loading" ? (
+          <form onSubmit={handleAddressSubmit} className="flex flex-col gap-2">
+            <p className="text-sm text-gray-500">배송지 변경</p>
+            <input
+              type="text"
+              required
+              placeholder="우편번호"
+              value={postNo}
+              onChange={(e) => setPostNo(e.target.value)}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              required
+              placeholder="기본 주소"
+              value={baseAddr}
+              onChange={(e) => setBaseAddr(e.target.value)}
+              className={inputClass}
+            />
+            <input
+              type="text"
+              required
+              placeholder="상세 주소"
+              value={detailAddr}
+              onChange={(e) => setDetailAddr(e.target.value)}
+              className={inputClass}
+            />
+            {addrError && <p className="text-sm text-red-500">{addrError}</p>}
+            <div className="flex gap-2">
+              <button
+                type="submit"
+                disabled={addrState === "loading"}
+                className="rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
+              >
+                {addrState === "loading" ? "저장 중..." : "저장"}
+              </button>
+              <button
+                type="button"
+                onClick={() => setAddrState("idle")}
+                disabled={addrState === "loading"}
+                className="rounded-lg border border-gray-200 text-sm font-medium px-4 py-2 hover:border-gray-400 transition-colors disabled:opacity-50"
+              >
+                취소
+              </button>
+            </div>
+          </form>
+        ) : (
+          <div className="flex justify-between text-sm">
+            <span className="text-gray-500">배송지</span>
+            <span className="text-gray-900 text-right">
+              ({order.postNo}) {order.baseAddr} {order.detailAddr}
+              {isPending && (
+                <button
+                  onClick={startAddressEdit}
+                  className="block ml-auto mt-1 text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                >
+                  배송지 변경
+                </button>
+              )}
+            </span>
+          </div>
+        )}
         <div className="flex justify-between">
           <span className="text-sm text-gray-500">결제 금액</span>
           <span className="text-lg font-bold text-gray-900">
@@ -136,7 +233,7 @@ function OrderDetailView({ orderId }: { orderId: number }) {
         </div>
       </div>
 
-      {order.status === "PENDING" && (
+      {isPending && (
         <div className="border-t border-gray-100 pt-4">
           {cancelState === "idle" ? (
             <button
