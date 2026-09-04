@@ -78,7 +78,14 @@ export default function CheckoutPage() {
           </p>
         )}
         <div className="flex flex-col items-center gap-3">
-          {!isGuest && (
+          {isGuest ? (
+            <Link
+              href="/orders/guest"
+              className="w-full rounded-lg bg-gray-900 text-white text-sm font-medium py-2.5 hover:bg-gray-700 transition-colors"
+            >
+              주문 조회하기
+            </Link>
+          ) : (
             <Link
               href={`/orders/${result.orderId}`}
               className="w-full rounded-lg bg-gray-900 text-white text-sm font-medium py-2.5 hover:bg-gray-700 transition-colors"

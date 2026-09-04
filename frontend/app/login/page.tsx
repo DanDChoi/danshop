@@ -97,6 +97,12 @@ function LoginForm() {
           회원가입
         </Link>
       </p>
+      <p className="mt-2 text-center text-sm text-gray-500">
+        비회원으로 주문하셨나요?{" "}
+        <Link href="/orders/guest" className="font-medium text-gray-900 hover:underline">
+          주문 조회
+        </Link>
+      </p>
     </main>
   );
 }
