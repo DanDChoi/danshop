@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { getOrders, ApiError, type OrderSummary } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
-import { useAuth } from "@/lib/auth-context";
+import { useRequireAuth } from "@/lib/use-require-auth";
 
 const PAGE_SIZE = 10;
 
@@ -26,7 +26,7 @@ function OrdersShell() {
 
 function OrdersList({ page }: { page: number }) {
   const router = useRouter();
-  const { accessToken } = useAuth();
+  const accessToken = useRequireAuth();
 
   const [orders, setOrders] = useState<OrderSummary[]>([]);
   const [totalPages, setTotalPages] = useState(0);
@@ -34,10 +34,7 @@ function OrdersList({ page }: { page: number }) {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (!accessToken) {
-      router.replace("/login");
-      return;
-    }
+    if (!accessToken) return;
 
     let cancelled = false;
 
@@ -58,7 +55,7 @@ function OrdersList({ page }: { page: number }) {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, page, router]);
+  }, [accessToken, page]);
 
   if (!accessToken) {
     return (

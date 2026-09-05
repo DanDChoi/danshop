@@ -2,7 +2,7 @@
 
 import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import {
   getOrder,
   cancelOrder,
@@ -11,7 +11,7 @@ import {
   type OrderDetail,
 } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
-import { useAuth } from "@/lib/auth-context";
+import { useRequireAuth } from "@/lib/use-require-auth";
 
 export default function OrderDetailPage() {
   const params = useParams<{ orderId: string }>();
@@ -21,8 +21,7 @@ export default function OrderDetailPage() {
 }
 
 function OrderDetailView({ orderId }: { orderId: number }) {
-  const router = useRouter();
-  const { accessToken } = useAuth();
+  const accessToken = useRequireAuth();
 
   const [order, setOrder] = useState<OrderDetail | null>(null);
   const [error, setError] = useState("");
@@ -37,10 +36,7 @@ function OrderDetailView({ orderId }: { orderId: number }) {
   const [detailAddr, setDetailAddr] = useState("");
 
   useEffect(() => {
-    if (!accessToken) {
-      router.replace("/login");
-      return;
-    }
+    if (!accessToken) return;
 
     let cancelled = false;
 
@@ -57,7 +53,7 @@ function OrderDetailView({ orderId }: { orderId: number }) {
     return () => {
       cancelled = true;
     };
-  }, [accessToken, orderId, router]);
+  }, [accessToken, orderId]);
 
   const handleCancel = async () => {
     if (!accessToken) return;

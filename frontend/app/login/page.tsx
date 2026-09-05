@@ -20,6 +20,12 @@ function LoginForm() {
   const signupSuccess = searchParams.get("signup") === "success";
   const { login: setAuth } = useAuth();
 
+  const returnToParam = searchParams.get("returnTo");
+  const returnTo =
+    returnToParam && returnToParam.startsWith("/") && !returnToParam.startsWith("//")
+      ? returnToParam
+      : "/";
+
   const [userId, setUserId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -33,7 +39,7 @@ function LoginForm() {
     try {
       const tokens = await login({ userId, password });
       setAuth(userId, tokens);
-      router.push("/");
+      router.push(returnTo);
     } catch (err) {
       setError(err instanceof ApiError ? err.message : "로그인에 실패했습니다.");
     } finally {
