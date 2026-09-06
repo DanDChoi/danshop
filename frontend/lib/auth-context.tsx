@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useSyncExternalStore, ReactNode } from "react";
-import type { TokenResponse } from "./api";
+import { registerAuthBridge, type TokenResponse } from "./api";
 
 const STORAGE_KEY = "danshop-auth";
 
@@ -45,6 +45,18 @@ function setStored(value: StoredAuth | null) {
   }
   listeners.forEach((listener) => listener());
 }
+
+// 액세스 토큰이 만료돼 401 이 나면 api.ts 가 refresh 토큰으로 재발급을 시도한다.
+registerAuthBridge({
+  getRefreshToken: () => (cached ?? readStored())?.refreshToken ?? null,
+  onAccessTokenRefreshed: (accessToken) => {
+    const current = cached ?? readStored();
+    if (current) {
+      setStored({ ...current, accessToken });
+    }
+  },
+  onRefreshFailed: () => setStored(null),
+});
 
 type AuthState = {
   userId: string | null;
