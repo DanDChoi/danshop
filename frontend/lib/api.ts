@@ -11,9 +11,59 @@ export class ApiError extends Error {
   }
 }
 
+// ─────────────────────────────────────────────
+// 액세스 토큰 자동 재발급 브릿지
+// (auth-context 가 registerAuthBridge 로 연결한다)
+// ─────────────────────────────────────────────
+
+type AuthBridge = {
+  getRefreshToken: () => string | null;
+  onAccessTokenRefreshed: (accessToken: string) => void;
+  onRefreshFailed: () => void;
+};
+
+let authBridge: AuthBridge | null = null;
+
+export function registerAuthBridge(bridge: AuthBridge): void {
+  authBridge = bridge;
+}
+
+function bearerToken(headers: HeadersInit | undefined): string | null {
+  if (!headers) return null;
+  const record = headers as Record<string, string>;
+  const value = record.Authorization ?? record.authorization;
+  return value?.startsWith("Bearer ") ? value.slice("Bearer ".length) : null;
+}
+
+let refreshInFlight: Promise<string | null> | null = null;
+
+function refreshAccessToken(): Promise<string | null> {
+  if (!refreshInFlight) {
+    refreshInFlight = (async () => {
+      const refreshToken = authBridge?.getRefreshToken();
+      if (!refreshToken) return null;
+      try {
+        const res = await fetch(`${API_BASE_URL}/user/refresh`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ refreshToken }),
+        });
+        if (!res.ok) return null;
+        return (await res.text()).trim();
+      } catch {
+        return null;
+      }
+    })().finally(() => {
+      refreshInFlight = null;
+    });
+  }
+  return refreshInFlight;
+}
+
 async function request<T>(
   path: string,
-  options: RequestInit = {}
+  options: RequestInit = {},
+  retryOnAuthFailure = true
 ): Promise<T> {
   const res = await fetch(`${API_BASE_URL}${path}`, {
     ...options,
@@ -27,6 +77,29 @@ async function request<T>(
   const body = isJson ? await res.json() : await res.text();
 
   if (!res.ok) {
+    const bridge = authBridge;
+    if (
+      res.status === 401 &&
+      retryOnAuthFailure &&
+      bridge &&
+      bearerToken(options.headers) &&
+      bridge.getRefreshToken()
+    ) {
+      const newAccessToken = await refreshAccessToken();
+      if (newAccessToken) {
+        bridge.onAccessTokenRefreshed(newAccessToken);
+        return request<T>(
+          path,
+          {
+            ...options,
+            headers: { ...options.headers, Authorization: `Bearer ${newAccessToken}` },
+          },
+          false
+        );
+      }
+      bridge.onRefreshFailed();
+    }
+
     const message =
       isJson && body && typeof body === "object" && "message" in body
         ? (body as { message: string }).message
