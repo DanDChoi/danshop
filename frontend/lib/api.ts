@@ -368,3 +368,48 @@ export function lookupGuestOrder(orderId: number, email: string): Promise<OrderD
     body: JSON.stringify({ orderId, email }),
   });
 }
+
+// ─────────────────────────────────────────────
+// 쿠폰 (회원 전용)
+// ─────────────────────────────────────────────
+
+export type DiscountType = "RATE" | "AMOUNT";
+
+export type Coupon = {
+  id: number;
+  name: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minOrderAmount: number;
+  remainQuantity: number;
+  expiresAt: string;
+};
+
+export type MyCoupon = {
+  couponId: number;
+  name: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minOrderAmount: number;
+  expiresAt: string;
+  used: boolean;
+};
+
+export function getAvailableCoupons(token: string): Promise<Coupon[]> {
+  return request<Coupon[]>("/coupons", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function getMyCoupons(token: string): Promise<MyCoupon[]> {
+  return request<MyCoupon[]>("/coupons/my", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function issueCoupon(token: string, couponId: number): Promise<string> {
+  return request<string>(`/coupons/${couponId}/issue`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
