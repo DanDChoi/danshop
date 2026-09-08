@@ -34,6 +34,12 @@ export default function Navbar() {
               >
                 주문내역
               </Link>
+              <Link
+                href="/coupons"
+                className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                쿠폰함
+              </Link>
               <span className="text-sm text-gray-500">{userId}님</span>
               <button
                 onClick={logout}
