@@ -4,7 +4,17 @@ import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
-import { getCart, checkoutCart, ApiError, type Cart, type Identity } from "@/lib/api";
+import {
+  getCart,
+  getMyCoupons,
+  getPointBalance,
+  checkoutCart,
+  ApiError,
+  type Cart,
+  type Identity,
+  type MyCoupon,
+} from "@/lib/api";
+import { formatDiscount, couponDiscount, isCouponUsable } from "@/lib/coupon";
 
 function resolveIdentity(accessToken: string | null): Identity {
   return accessToken ? { token: accessToken } : { guestToken: getOrCreateGuestToken() };
@@ -28,6 +38,11 @@ export default function CheckoutPage() {
   const [cart, setCart] = useState<Cart | null>(null);
   const [cartError, setCartError] = useState("");
 
+  const [myCoupons, setMyCoupons] = useState<MyCoupon[]>([]);
+  const [pointBalance, setPointBalance] = useState(0);
+  const [selectedCouponId, setSelectedCouponId] = useState<number | null>(null);
+  const [pointsInput, setPointsInput] = useState("");
+
   useEffect(() => {
     let cancelled = false;
 
@@ -41,31 +56,22 @@ export default function CheckoutPage() {
         setCartError(err instanceof ApiError ? err.message : "장바구니를 불러오지 못했습니다.");
       });
 
+    if (accessToken) {
+      Promise.all([getMyCoupons(accessToken), getPointBalance(accessToken)])
+        .then(([coupons, balance]) => {
+          if (cancelled) return;
+          setMyCoupons(coupons);
+          setPointBalance(balance.pointBalance);
+        })
+        .catch(() => {
+          /* 쿠폰·포인트는 선택 사항이므로 조회 실패해도 결제는 진행 */
+        });
+    }
+
     return () => {
       cancelled = true;
     };
   }, [accessToken]);
-
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
-    setError("");
-    setIsSubmitting(true);
-
-    try {
-      const identity = resolveIdentity(accessToken);
-      const response = await checkoutCart(identity, {
-        postNo,
-        baseAddr,
-        detailAddr,
-        ...(isGuest ? { ordererName, ordererEmail, ordererPhone } : {}),
-      });
-      setResult(response);
-    } catch (err) {
-      setError(err instanceof ApiError ? err.message : "주문 생성에 실패했습니다.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   if (result) {
     return (
@@ -128,6 +134,42 @@ export default function CheckoutPage() {
       </main>
     );
   }
+
+  const subtotal = cart.totalAmount;
+  const usableCoupons = myCoupons.filter((c) => isCouponUsable(c, subtotal));
+  const selectedCoupon =
+    usableCoupons.find((c) => c.couponId === selectedCouponId) ?? null;
+  const discount = selectedCoupon ? couponDiscount(selectedCoupon, subtotal) : 0;
+  const afterCoupon = subtotal - discount;
+  const maxPoints = Math.min(pointBalance, afterCoupon);
+  const pointsToUse = Math.max(0, Math.min(Number(pointsInput) || 0, maxPoints));
+  const finalAmount = afterCoupon - pointsToUse;
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+    setError("");
+    setIsSubmitting(true);
+
+    try {
+      const identity = resolveIdentity(accessToken);
+      const response = await checkoutCart(identity, {
+        postNo,
+        baseAddr,
+        detailAddr,
+        ...(isGuest
+          ? { ordererName, ordererEmail, ordererPhone }
+          : {
+              ...(selectedCoupon ? { couponId: selectedCoupon.couponId } : {}),
+              ...(pointsToUse > 0 ? { usePoints: pointsToUse } : {}),
+            }),
+      });
+      setResult(response);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : "주문 생성에 실패했습니다.");
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <main className="max-w-sm mx-auto px-4 py-16">
@@ -225,6 +267,87 @@ export default function CheckoutPage() {
             className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
         </div>
+
+        {!isGuest && (
+          <>
+            <div className="h-px bg-gray-100 my-1" />
+
+            <div>
+              <label htmlFor="coupon" className="block text-sm font-medium text-gray-700 mb-1">
+                쿠폰
+              </label>
+              <select
+                id="coupon"
+                value={selectedCouponId ?? ""}
+                onChange={(e) =>
+                  setSelectedCouponId(e.target.value ? Number(e.target.value) : null)
+                }
+                className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              >
+                <option value="">쿠폰 미사용</option>
+                {usableCoupons.map((c) => (
+                  <option key={c.couponId} value={c.couponId}>
+                    {c.name} ({formatDiscount(c.discountType, c.discountValue)})
+                  </option>
+                ))}
+              </select>
+              {usableCoupons.length === 0 && (
+                <p className="mt-1 text-xs text-gray-400">사용 가능한 쿠폰이 없습니다</p>
+              )}
+            </div>
+
+            <div>
+              <label htmlFor="points" className="block text-sm font-medium text-gray-700 mb-1">
+                포인트 사용
+              </label>
+              <div className="flex gap-2">
+                <input
+                  id="points"
+                  type="number"
+                  min={0}
+                  max={maxPoints}
+                  value={pointsInput}
+                  onChange={(e) => setPointsInput(e.target.value)}
+                  placeholder="0"
+                  className="w-full rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+                />
+                <button
+                  type="button"
+                  onClick={() => setPointsInput(String(maxPoints))}
+                  className="shrink-0 rounded-lg border border-gray-200 text-sm font-medium px-3 hover:border-gray-400 transition-colors"
+                >
+                  전액
+                </button>
+              </div>
+              <p className="mt-1 text-xs text-gray-400">
+                보유 {pointBalance.toLocaleString()}P
+              </p>
+            </div>
+
+            <div className="border-t border-gray-100 pt-3 text-sm space-y-1">
+              <div className="flex justify-between text-gray-500">
+                <span>상품 금액</span>
+                <span>{subtotal.toLocaleString()}원</span>
+              </div>
+              {discount > 0 && (
+                <div className="flex justify-between text-gray-500">
+                  <span>쿠폰 할인</span>
+                  <span>-{discount.toLocaleString()}원</span>
+                </div>
+              )}
+              {pointsToUse > 0 && (
+                <div className="flex justify-between text-gray-500">
+                  <span>포인트 사용</span>
+                  <span>-{pointsToUse.toLocaleString()}원</span>
+                </div>
+              )}
+              <div className="flex justify-between pt-1 font-bold text-gray-900">
+                <span>최종 결제 금액</span>
+                <span>{finalAmount.toLocaleString()}원</span>
+              </div>
+            </div>
+          </>
+        )}
 
         {error && <p className="text-sm text-red-500">{error}</p>}
 

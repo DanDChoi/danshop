@@ -413,3 +413,13 @@ export function issueCoupon(token: string, couponId: number): Promise<string> {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─────────────────────────────────────────────
+// 포인트 (회원 전용)
+// ─────────────────────────────────────────────
+
+export function getPointBalance(token: string): Promise<{ pointBalance: number }> {
+  return request<{ pointBalance: number }>("/points/balance", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
