@@ -4,7 +4,15 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
-import { getProduct, addToCart, ApiError, type Product } from "@/lib/api";
+import {
+  getProduct,
+  addToCart,
+  isWished,
+  addToWishlist,
+  removeFromWishlist,
+  ApiError,
+  type Product,
+} from "@/lib/api";
 
 export default function ProductDetailPage() {
   const params = useParams<{ productNo: string }>();
@@ -22,6 +30,9 @@ function ProductDetail({ productNo }: { productNo: number }) {
   const [addStatus, setAddStatus] = useState<"idle" | "loading" | "success" | "error">("idle");
   const [addError, setAddError] = useState("");
 
+  const [wished, setWished] = useState<boolean | null>(null);
+  const [wishBusy, setWishBusy] = useState(false);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -35,10 +46,38 @@ function ProductDetail({ productNo }: { productNo: number }) {
         setError(err instanceof ApiError ? err.message : "상품을 불러오지 못했습니다.");
       });
 
+    if (accessToken) {
+      isWished(accessToken, productNo)
+        .then((res) => {
+          if (!cancelled) setWished(res.wished);
+        })
+        .catch(() => {
+          /* 찜 여부 조회 실패는 무시 */
+        });
+    }
+
     return () => {
       cancelled = true;
     };
-  }, [productNo]);
+  }, [productNo, accessToken]);
+
+  const handleToggleWish = async () => {
+    if (!accessToken) return;
+    setWishBusy(true);
+    try {
+      if (wished) {
+        await removeFromWishlist(accessToken, productNo);
+        setWished(false);
+      } else {
+        await addToWishlist(accessToken, productNo);
+        setWished(true);
+      }
+    } catch {
+      /* 실패 시 상태 유지 */
+    } finally {
+      setWishBusy(false);
+    }
+  };
 
   const handleAddToCart = async () => {
     setAddStatus("loading");
@@ -105,13 +144,29 @@ function ProductDetail({ productNo }: { productNo: number }) {
         />
       </div>
 
-      <button
-        onClick={handleAddToCart}
-        disabled={addStatus === "loading" || product.stock === 0}
-        className="rounded-lg bg-gray-900 text-white text-sm font-medium px-5 py-2.5 hover:bg-gray-700 transition-colors disabled:opacity-50"
-      >
-        {product.stock === 0 ? "품절" : addStatus === "loading" ? "담는 중..." : "장바구니 담기"}
-      </button>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={handleAddToCart}
+          disabled={addStatus === "loading" || product.stock === 0}
+          className="rounded-lg bg-gray-900 text-white text-sm font-medium px-5 py-2.5 hover:bg-gray-700 transition-colors disabled:opacity-50"
+        >
+          {product.stock === 0 ? "품절" : addStatus === "loading" ? "담는 중..." : "장바구니 담기"}
+        </button>
+
+        {accessToken && (
+          <button
+            onClick={handleToggleWish}
+            disabled={wishBusy}
+            aria-pressed={wished === true}
+            className="rounded-lg border border-gray-200 px-3 py-2.5 text-sm hover:border-gray-400 transition-colors disabled:opacity-50"
+          >
+            <span className={wished ? "text-red-500" : "text-gray-400"}>
+              {wished ? "♥" : "♡"}
+            </span>
+            <span className="ml-1.5 text-gray-600">찜</span>
+          </button>
+        )}
+      </div>
 
       {addStatus === "success" && (
         <p className="text-sm text-green-600 mt-3">장바구니에 담았습니다.</p>
