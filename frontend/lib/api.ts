@@ -423,3 +423,48 @@ export function getPointBalance(token: string): Promise<{ pointBalance: number }
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─────────────────────────────────────────────
+// 위시리스트 (회원 전용)
+// ─────────────────────────────────────────────
+
+export type WishlistItem = {
+  productId: number;
+  productName: string;
+  price: number;
+  category: string | null;
+  avgRating: number | null;
+};
+
+export function getWishlist(token: string): Promise<WishlistItem[]> {
+  return request<WishlistItem[]>("/wishlist", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function isWished(token: string, productId: number): Promise<{ wished: boolean }> {
+  return request<{ wished: boolean }>(`/wishlist/${productId}/check`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function addToWishlist(token: string, productId: number): Promise<string> {
+  return request<string>(`/wishlist/${productId}`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function removeFromWishlist(token: string, productId: number): Promise<string> {
+  return request<string>(`/wishlist/${productId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function moveWishlistToCart(token: string, productId: number): Promise<string> {
+  return request<string>(`/wishlist/${productId}/to-cart`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}

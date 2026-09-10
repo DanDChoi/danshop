@@ -3,7 +3,15 @@
 import { Suspense, useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { getProducts, ApiError, type Product } from "@/lib/api";
+import {
+  getProducts,
+  getWishlist,
+  addToWishlist,
+  removeFromWishlist,
+  ApiError,
+  type Product,
+} from "@/lib/api";
+import { useAuth } from "@/lib/auth-context";
 
 const PAGE_SIZE = 12;
 
@@ -25,11 +33,14 @@ function ProductsShell() {
 
 function ProductsList({ page, keyword }: { page: number; keyword: string }) {
   const router = useRouter();
+  const { accessToken } = useAuth();
 
   const [products, setProducts] = useState<Product[]>([]);
   const [totalPages, setTotalPages] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  const [wishedIds, setWishedIds] = useState<Set<number>>(new Set());
 
   useEffect(() => {
     let cancelled = false;
@@ -52,6 +63,48 @@ function ProductsList({ page, keyword }: { page: number; keyword: string }) {
       cancelled = true;
     };
   }, [page, keyword]);
+
+  useEffect(() => {
+    if (!accessToken) return;
+
+    let cancelled = false;
+
+    getWishlist(accessToken)
+      .then((items) => {
+        if (!cancelled) setWishedIds(new Set(items.map((item) => item.productId)));
+      })
+      .catch(() => {
+        /* 찜 목록 조회 실패는 무시 */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [accessToken]);
+
+  const toggleWish = async (productNo: number) => {
+    if (!accessToken) return;
+    const wasWished = wishedIds.has(productNo);
+
+    setWishedIds((prev) => {
+      const next = new Set(prev);
+      if (wasWished) next.delete(productNo);
+      else next.add(productNo);
+      return next;
+    });
+
+    try {
+      if (wasWished) await removeFromWishlist(accessToken, productNo);
+      else await addToWishlist(accessToken, productNo);
+    } catch {
+      setWishedIds((prev) => {
+        const next = new Set(prev);
+        if (wasWished) next.add(productNo);
+        else next.delete(productNo);
+        return next;
+      });
+    }
+  };
 
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -99,15 +152,34 @@ function ProductsList({ page, keyword }: { page: number; keyword: string }) {
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
           {products.map((product) => (
-            <Link
-              key={product.productNo}
-              href={`/products/${product.productNo}`}
-              className="block rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
-            >
-              <p className="text-sm font-semibold text-gray-900 mb-1">{product.productName}</p>
-              <p className="text-sm text-gray-500">{product.price.toLocaleString()}원</p>
-              <p className="text-xs text-gray-400 mt-1">재고 {product.stock}개</p>
-            </Link>
+            <div key={product.productNo} className="relative">
+              <Link
+                href={`/products/${product.productNo}`}
+                className="block rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-900 mb-1 pr-6">
+                  {product.productName}
+                </p>
+                <p className="text-sm text-gray-500">{product.price.toLocaleString()}원</p>
+                <p className="text-xs text-gray-400 mt-1">재고 {product.stock}개</p>
+              </Link>
+              {accessToken && (
+                <button
+                  onClick={() => toggleWish(product.productNo)}
+                  aria-pressed={wishedIds.has(product.productNo)}
+                  aria-label="찜"
+                  className="absolute top-2 right-2 text-lg leading-none"
+                >
+                  <span
+                    className={
+                      wishedIds.has(product.productNo) ? "text-red-500" : "text-gray-300"
+                    }
+                  >
+                    {wishedIds.has(product.productNo) ? "♥" : "♡"}
+                  </span>
+                </button>
+              )}
+            </div>
           ))}
         </div>
       )}
