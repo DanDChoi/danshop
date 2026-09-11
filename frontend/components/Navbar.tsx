@@ -40,6 +40,12 @@ export default function Navbar() {
               >
                 쿠폰함
               </Link>
+              <Link
+                href="/wishlist"
+                className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                위시리스트
+              </Link>
               <span className="text-sm text-gray-500">{userId}님</span>
               <button
                 onClick={logout}
