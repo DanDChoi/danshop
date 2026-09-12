@@ -46,7 +46,12 @@ export default function Navbar() {
               >
                 위시리스트
               </Link>
-              <span className="text-sm text-gray-500">{userId}님</span>
+              <Link
+                href="/mypage"
+                className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+              >
+                {userId}님
+              </Link>
               <button
                 onClick={logout}
                 className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
