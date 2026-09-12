@@ -150,6 +150,32 @@ export function login(payload: LoginPayload): Promise<TokenResponse> {
   });
 }
 
+export type UserProfile = {
+  userId: string;
+  name: string;
+  email: string;
+  pointBalance: number;
+};
+
+export function getMe(token: string): Promise<UserProfile> {
+  return request<UserProfile>("/user/me", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export type ChangePasswordPayload = {
+  currentPassword: string;
+  newPassword: string;
+};
+
+export function changePassword(token: string, payload: ChangePasswordPayload): Promise<string> {
+  return request<string>("/user/password", {
+    method: "PUT",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 // ─────────────────────────────────────────────
 // 식별(회원/게스트) 공통 헤더
 // ─────────────────────────────────────────────
