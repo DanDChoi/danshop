@@ -15,6 +15,31 @@ import { useAuth } from "@/lib/auth-context";
 
 const PAGE_SIZE = 12;
 
+const SORT_OPTIONS = [
+  { value: "latest", label: "최신순" },
+  { value: "price_asc", label: "낮은 가격순" },
+  { value: "price_desc", label: "높은 가격순" },
+] as const;
+
+type Filters = {
+  keyword: string;
+  category: string;
+  minPrice: string;
+  maxPrice: string;
+  sort: string;
+};
+
+function buildProductsQuery(filters: Filters, page: number): string {
+  const params = new URLSearchParams();
+  if (filters.keyword) params.set("keyword", filters.keyword);
+  if (filters.category) params.set("category", filters.category);
+  if (filters.minPrice) params.set("minPrice", filters.minPrice);
+  if (filters.maxPrice) params.set("maxPrice", filters.maxPrice);
+  if (filters.sort && filters.sort !== "latest") params.set("sort", filters.sort);
+  params.set("page", String(page));
+  return params.toString();
+}
+
 export default function ProductsPage() {
   return (
     <Suspense fallback={null}>
@@ -26,12 +51,24 @@ export default function ProductsPage() {
 function ProductsShell() {
   const searchParams = useSearchParams();
   const page = Number(searchParams.get("page") ?? "0");
-  const keyword = searchParams.get("keyword") ?? "";
+  const filters: Filters = {
+    keyword: searchParams.get("keyword") ?? "",
+    category: searchParams.get("category") ?? "",
+    minPrice: searchParams.get("minPrice") ?? "",
+    maxPrice: searchParams.get("maxPrice") ?? "",
+    sort: searchParams.get("sort") ?? "latest",
+  };
 
-  return <ProductsList key={`${page}:${keyword}`} page={page} keyword={keyword} />;
+  return (
+    <ProductsList
+      key={`${page}:${filters.keyword}:${filters.category}:${filters.minPrice}:${filters.maxPrice}:${filters.sort}`}
+      page={page}
+      filters={filters}
+    />
+  );
 }
 
-function ProductsList({ page, keyword }: { page: number; keyword: string }) {
+function ProductsList({ page, filters }: { page: number; filters: Filters }) {
   const router = useRouter();
   const { accessToken } = useAuth();
 
@@ -45,7 +82,15 @@ function ProductsList({ page, keyword }: { page: number; keyword: string }) {
   useEffect(() => {
     let cancelled = false;
 
-    getProducts({ page, size: PAGE_SIZE, keyword: keyword || undefined })
+    getProducts({
+      page,
+      size: PAGE_SIZE,
+      keyword: filters.keyword || undefined,
+      category: filters.category || undefined,
+      minPrice: filters.minPrice ? Number(filters.minPrice) : undefined,
+      maxPrice: filters.maxPrice ? Number(filters.maxPrice) : undefined,
+      sort: filters.sort,
+    })
       .then((data) => {
         if (cancelled) return;
         setProducts(data.content);
@@ -62,7 +107,7 @@ function ProductsList({ page, keyword }: { page: number; keyword: string }) {
     return () => {
       cancelled = true;
     };
-  }, [page, keyword]);
+  }, [page, filters.keyword, filters.category, filters.minPrice, filters.maxPrice, filters.sort]);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -109,38 +154,75 @@ function ProductsList({ page, keyword }: { page: number; keyword: string }) {
   const handleSearch = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     const formData = new FormData(e.currentTarget);
-    const nextKeyword = String(formData.get("keyword") ?? "").trim();
-    const params = new URLSearchParams();
-    if (nextKeyword) params.set("keyword", nextKeyword);
-    params.set("page", "0");
-    router.push(`/products?${params.toString()}`);
+    const nextFilters: Filters = {
+      keyword: String(formData.get("keyword") ?? "").trim(),
+      category: String(formData.get("category") ?? "").trim(),
+      minPrice: String(formData.get("minPrice") ?? "").trim(),
+      maxPrice: String(formData.get("maxPrice") ?? "").trim(),
+      sort: String(formData.get("sort") ?? "latest"),
+    };
+    router.push(`/products?${buildProductsQuery(nextFilters, 0)}`);
   };
 
   const goToPage = (nextPage: number) => {
-    const params = new URLSearchParams();
-    if (keyword) params.set("keyword", keyword);
-    params.set("page", String(nextPage));
-    router.push(`/products?${params.toString()}`);
+    router.push(`/products?${buildProductsQuery(filters, nextPage)}`);
   };
 
   return (
     <main className="max-w-4xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-6">상품</h1>
 
-      <form onSubmit={handleSearch} className="flex gap-2 mb-8">
-        <input
-          type="text"
-          name="keyword"
-          defaultValue={keyword}
-          placeholder="상품 검색"
-          className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
-        />
-        <button
-          type="submit"
-          className="rounded-lg bg-gray-900 text-white text-sm font-medium px-5 py-2.5 hover:bg-gray-700 transition-colors"
-        >
-          검색
-        </button>
+      <form onSubmit={handleSearch} className="flex flex-col gap-2 mb-8">
+        <div className="flex gap-2">
+          <input
+            type="text"
+            name="keyword"
+            defaultValue={filters.keyword}
+            placeholder="상품 검색"
+            className="flex-1 rounded-lg border border-gray-200 px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <button
+            type="submit"
+            className="rounded-lg bg-gray-900 text-white text-sm font-medium px-5 py-2.5 hover:bg-gray-700 transition-colors"
+          >
+            검색
+          </button>
+        </div>
+
+        <div className="flex flex-wrap gap-2">
+          <input
+            type="text"
+            name="category"
+            defaultValue={filters.category}
+            placeholder="카테고리"
+            className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <input
+            type="number"
+            name="minPrice"
+            defaultValue={filters.minPrice}
+            placeholder="최소 가격"
+            className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <input
+            type="number"
+            name="maxPrice"
+            defaultValue={filters.maxPrice}
+            placeholder="최대 가격"
+            className="w-28 rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <select
+            name="sort"
+            defaultValue={filters.sort}
+            className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option.value} value={option.value}>
+                {option.label}
+              </option>
+            ))}
+          </select>
+        </div>
       </form>
 
       {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
