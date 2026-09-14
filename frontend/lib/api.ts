@@ -1,3 +1,5 @@
+import { notifyCartChanged } from "./cart-store";
+
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "http://localhost:8080";
 
 export class ApiError extends Error {
@@ -269,6 +271,9 @@ export function addToCart(identity: Identity, productId: number, quantity = 1): 
   return request<string>(`/cart/${productId}?quantity=${quantity}`, {
     method: "POST",
     headers: identityHeaders(identity),
+  }).then((result) => {
+    notifyCartChanged();
+    return result;
   });
 }
 
@@ -276,6 +281,9 @@ export function updateCartQuantity(identity: Identity, productId: number, quanti
   return request<string>(`/cart/${productId}?quantity=${quantity}`, {
     method: "PATCH",
     headers: identityHeaders(identity),
+  }).then((result) => {
+    notifyCartChanged();
+    return result;
   });
 }
 
@@ -283,6 +291,9 @@ export function removeFromCart(identity: Identity, productId: number): Promise<s
   return request<string>(`/cart/${productId}`, {
     method: "DELETE",
     headers: identityHeaders(identity),
+  }).then((result) => {
+    notifyCartChanged();
+    return result;
   });
 }
 
@@ -290,6 +301,9 @@ export function clearCart(identity: Identity): Promise<string> {
   return request<string>("/cart", {
     method: "DELETE",
     headers: identityHeaders(identity),
+  }).then((result) => {
+    notifyCartChanged();
+    return result;
   });
 }
 
@@ -310,6 +324,9 @@ export function checkoutCart(identity: Identity, payload: CheckoutPayload): Prom
     method: "POST",
     headers: identityHeaders(identity),
     body: JSON.stringify(payload),
+  }).then((result) => {
+    notifyCartChanged();
+    return result;
   });
 }
 

@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { useCartCount } from "@/lib/use-cart-count";
 
 export default function Navbar() {
   const { userId, logout } = useAuth();
+  const cartCount = useCartCount();
 
   return (
     <header className="border-b border-gray-100 bg-white">
@@ -22,9 +24,14 @@ export default function Navbar() {
           </Link>
           <Link
             href="/cart"
-            className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+            className="relative text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
           >
             장바구니
+            {cartCount > 0 && (
+              <span className="absolute -top-2 -right-3 flex h-4 min-w-4 items-center justify-center rounded-full bg-gray-900 px-1 text-[10px] font-semibold text-white">
+                {cartCount > 99 ? "99+" : cartCount}
+              </span>
+            )}
           </Link>
           {userId ? (
             <>
