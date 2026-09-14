@@ -1,10 +1,30 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
+import { getProducts, type Product } from "@/lib/api";
 
 export default function Home() {
   const { userId } = useAuth();
+
+  const [newProducts, setNewProducts] = useState<Product[]>([]);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    getProducts({ sort: "latest", size: 4 })
+      .then((data) => {
+        if (!cancelled) setNewProducts(data.content);
+      })
+      .catch(() => {
+        /* 신상품 섹션은 실패해도 조용히 숨긴다 */
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   return (
     <main className="max-w-4xl mx-auto px-4 md:px-6 py-16 md:py-24">
@@ -41,6 +61,34 @@ export default function Home() {
           )}
         </div>
       </div>
+
+      {newProducts.length > 0 && (
+        <section className="mt-20">
+          <div className="flex items-baseline justify-between mb-4">
+            <h2 className="text-lg font-bold text-gray-900">신상품</h2>
+            <Link
+              href="/products"
+              className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
+            >
+              전체보기
+            </Link>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {newProducts.map((product) => (
+              <Link
+                key={product.productNo}
+                href={`/products/${product.productNo}`}
+                className="block rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+              >
+                <p className="text-sm font-semibold text-gray-900 mb-1 truncate">
+                  {product.productName}
+                </p>
+                <p className="text-sm text-gray-500">{product.price.toLocaleString()}원</p>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
     </main>
   );
 }
