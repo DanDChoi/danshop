@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useSyncExternalStore, ReactNode } from "react";
 import { registerAuthBridge, type TokenResponse } from "./api";
+import { getRoleFromToken } from "./jwt";
 
 const STORAGE_KEY = "danshop-auth";
 
@@ -61,6 +62,7 @@ registerAuthBridge({
 type AuthState = {
   userId: string | null;
   accessToken: string | null;
+  isAdmin: boolean;
   login: (userId: string, tokens: TokenResponse) => void;
   logout: () => void;
 };
@@ -83,6 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       value={{
         userId: stored?.userId ?? null,
         accessToken: stored?.accessToken ?? null,
+        isAdmin: getRoleFromToken(stored?.accessToken ?? null) === "ROLE_ADMIN",
         login,
         logout,
       }}

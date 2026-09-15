@@ -5,7 +5,7 @@ import { useAuth } from "@/lib/auth-context";
 import { useCartCount } from "@/lib/use-cart-count";
 
 export default function Navbar() {
-  const { userId, logout } = useAuth();
+  const { userId, isAdmin, logout } = useAuth();
   const cartCount = useCartCount();
 
   return (
@@ -53,6 +53,14 @@ export default function Navbar() {
               >
                 위시리스트
               </Link>
+              {isAdmin && (
+                <Link
+                  href="/admin"
+                  className="text-sm font-medium text-gray-500 hover:text-gray-800 transition-colors"
+                >
+                  관리자
+                </Link>
+              )}
               <Link
                 href="/mypage"
                 className="text-sm text-gray-500 hover:text-gray-800 transition-colors"
