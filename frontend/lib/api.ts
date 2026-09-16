@@ -247,6 +247,45 @@ export function getProduct(productNo: number): Promise<Product> {
 }
 
 // ─────────────────────────────────────────────
+// 상품 관리 (ADMIN 전용)
+// ─────────────────────────────────────────────
+
+export type ProductPayload = {
+  productName: string;
+  price: number;
+  category?: string;
+  stock: number;
+  description?: string;
+};
+
+export function createProduct(token: string, payload: ProductPayload): Promise<string> {
+  return request<string>("/product", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function updateProduct(
+  token: string,
+  productNo: number,
+  payload: ProductPayload
+): Promise<string> {
+  return request<string>(`/product/${productNo}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteProduct(token: string, productNo: number): Promise<string> {
+  return request<string>(`/product/${productNo}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+// ─────────────────────────────────────────────
 // 장바구니 (회원/게스트 겸용)
 // ─────────────────────────────────────────────
 
