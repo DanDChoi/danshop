@@ -26,10 +26,13 @@ export default function AdminPage() {
           <p className="text-sm font-semibold text-gray-900 mb-1">상품 관리</p>
           <p className="text-sm text-gray-500">상품 등록·수정·삭제</p>
         </Link>
-        <div className="rounded-xl border border-gray-100 p-4 opacity-50">
+        <Link
+          href="/admin/orders"
+          className="rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+        >
           <p className="text-sm font-semibold text-gray-900 mb-1">주문 관리</p>
-          <p className="text-sm text-gray-500">준비 중</p>
-        </div>
+          <p className="text-sm text-gray-500">전체 주문 조회 · 상태 변경</p>
+        </Link>
       </div>
     </main>
   );
