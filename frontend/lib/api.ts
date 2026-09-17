@@ -441,6 +441,36 @@ export function updateOrderAddress(
 }
 
 // ─────────────────────────────────────────────
+// 주문 관리 (ADMIN 전용)
+// ─────────────────────────────────────────────
+
+export function getAllOrdersAdmin(
+  token: string,
+  params: { page?: number; size?: number; status?: OrderStatus } = {}
+): Promise<Page<OrderSummary>> {
+  const query = new URLSearchParams();
+  if (params.page !== undefined) query.set("page", String(params.page));
+  if (params.size !== undefined) query.set("size", String(params.size));
+  if (params.status) query.set("status", params.status);
+
+  return request<Page<OrderSummary>>(`/admin/orders?${query.toString()}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
+export function updateOrderStatusAdmin(
+  token: string,
+  orderId: number,
+  status: OrderStatus
+): Promise<string> {
+  return request<string>(`/admin/orders/${orderId}/status`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify({ status }),
+  });
+}
+
+// ─────────────────────────────────────────────
 // 비회원 주문 조회
 // ─────────────────────────────────────────────
 
