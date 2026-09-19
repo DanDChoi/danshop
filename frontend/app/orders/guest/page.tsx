@@ -81,7 +81,7 @@ export default function GuestOrderLookupPage() {
   }
 
   return (
-    <main className="max-w-sm mx-auto px-4 py-16">
+    <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
       <h1 className="text-2xl font-bold text-gray-900 mb-2 text-center">비회원 주문 조회</h1>
       <p className="text-sm text-gray-400 mb-8 text-center">
         주문 시 입력한 주문번호와 이메일을 입력해주세요.
