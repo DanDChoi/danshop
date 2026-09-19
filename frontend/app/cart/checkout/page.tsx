@@ -75,7 +75,7 @@ export default function CheckoutPage() {
 
   if (result) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16 text-center">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">주문이 완료되었습니다</h1>
         <p className="text-sm text-gray-500 mb-2">주문번호: {result.orderId}</p>
         {isGuest && (
@@ -109,7 +109,7 @@ export default function CheckoutPage() {
 
   if (cartError) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
         <p className="text-sm text-red-500">{cartError}</p>
       </main>
     );
@@ -117,7 +117,7 @@ export default function CheckoutPage() {
 
   if (!cart) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
         <p className="text-sm text-gray-400">불러오는 중...</p>
       </main>
     );
@@ -125,7 +125,7 @@ export default function CheckoutPage() {
 
   if (cart.items.length === 0) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16 text-center">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24 text-center">
         <h1 className="text-2xl font-bold text-gray-900 mb-4">주문하기</h1>
         <p className="text-sm text-gray-400 mb-6">장바구니가 비어있어 주문할 수 없습니다.</p>
         <Link href="/products" className="text-sm font-medium text-gray-900 hover:underline">
@@ -172,7 +172,7 @@ export default function CheckoutPage() {
   };
 
   return (
-    <main className="max-w-sm mx-auto px-4 py-16">
+    <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
       <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">주문하기</h1>
 
       <form onSubmit={handleSubmit} className="flex flex-col gap-4">

@@ -57,7 +57,7 @@ export default function MyPage() {
 
   if (!accessToken) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
         <p className="text-sm text-gray-400">로그인이 필요합니다. 로그인 페이지로 이동합니다...</p>
       </main>
     );
@@ -65,7 +65,7 @@ export default function MyPage() {
 
   if (error) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
         <p className="text-sm text-red-500">{error}</p>
       </main>
     );
@@ -73,14 +73,14 @@ export default function MyPage() {
 
   if (!profile) {
     return (
-      <main className="max-w-sm mx-auto px-4 py-16">
+      <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
         <p className="text-sm text-gray-400">불러오는 중...</p>
       </main>
     );
   }
 
   return (
-    <main className="max-w-sm mx-auto px-4 py-16">
+    <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
       <h1 className="text-2xl font-bold text-gray-900 mb-8 text-center">마이페이지</h1>
 
       <div className="rounded-xl border border-gray-100 p-4 mb-10 space-y-2">

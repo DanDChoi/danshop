@@ -3,6 +3,8 @@
 Spring Boot 기반 이커머스 백엔드 프로젝트입니다.  
 JWT 인증, Redis 캐싱, 동시성 제어, RBAC 등 실무에서 자주 쓰이는 기술을 직접 구현했습니다.
 
+프론트엔드는 [`frontend/`](frontend/README.md) (Next.js)에 있습니다.
+
 ## 배포
 
 - **API 서버**: https://danshop-production.up.railway.app
