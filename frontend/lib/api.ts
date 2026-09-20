@@ -580,3 +580,27 @@ export function moveWishlistToCart(token: string, productId: number): Promise<st
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─────────────────────────────────────────────
+// 리뷰
+// ─────────────────────────────────────────────
+
+export type ReviewItem = {
+  id: number;
+  userId: string;
+  userName: string;
+  rating: number;
+  content: string;
+  createdAt: string;
+};
+
+export type ProductReviews = {
+  avgRating: number | null;
+  reviewCount: number;
+  reviews: ReviewItem[];
+};
+
+export type ReviewPayload = {
+  rating: number;
+  content: string;
+};
