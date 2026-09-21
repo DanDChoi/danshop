@@ -604,3 +604,10 @@ export type ReviewPayload = {
   rating: number;
   content: string;
 };
+
+// `/products/**`는 SecurityConfig의 permitAll 목록에 없어서 조회도 로그인이 필요하다.
+export function getProductReviews(token: string, productId: number): Promise<ProductReviews> {
+  return request<ProductReviews>(`/products/${productId}/reviews`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
