@@ -611,3 +611,16 @@ export function getProductReviews(token: string, productId: number): Promise<Pro
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// 구매하지 않은 상품이면 403, 이미 작성한 상품이면 409.
+export function createReview(
+  token: string,
+  productId: number,
+  payload: ReviewPayload
+): Promise<{ reviewId: number }> {
+  return request<{ reviewId: number }>(`/products/${productId}/reviews`, {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
