@@ -624,3 +624,23 @@ export function createReview(
     body: JSON.stringify(payload),
   });
 }
+
+// 본인 리뷰가 아니면 403.
+export function updateReview(
+  token: string,
+  reviewId: number,
+  payload: ReviewPayload
+): Promise<string> {
+  return request<string>(`/reviews/${reviewId}`, {
+    method: "PATCH",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
+export function deleteReview(token: string, reviewId: number): Promise<string> {
+  return request<string>(`/reviews/${reviewId}`, {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
