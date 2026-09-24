@@ -10,8 +10,10 @@ import {
   isWished,
   addToWishlist,
   removeFromWishlist,
+  getProductReviews,
   ApiError,
   type Product,
+  type ProductReviews,
 } from "@/lib/api";
 
 export default function ProductDetailPage() {
@@ -33,6 +35,8 @@ function ProductDetail({ productNo }: { productNo: number }) {
   const [wished, setWished] = useState<boolean | null>(null);
   const [wishBusy, setWishBusy] = useState(false);
 
+  const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
+
   useEffect(() => {
     let cancelled = false;
 
@@ -53,6 +57,15 @@ function ProductDetail({ productNo }: { productNo: number }) {
         })
         .catch(() => {
           /* 찜 여부 조회 실패는 무시 */
+        });
+
+      // 리뷰 조회도 로그인이 필요한 엔드포인트라 비회원에게는 섹션을 아예 숨긴다.
+      getProductReviews(accessToken, productNo)
+        .then((data) => {
+          if (!cancelled) setProductReviews(data);
+        })
+        .catch(() => {
+          /* 리뷰 조회 실패는 무시 — 섹션을 그냥 안 보여준다 */
         });
     }
 
@@ -122,6 +135,14 @@ function ProductDetail({ productNo }: { productNo: number }) {
         {product.price.toLocaleString()}원
       </p>
       <p className="text-sm text-gray-400 mb-6">재고 {product.stock}개</p>
+
+      {accessToken && productReviews && (
+        <p className="text-sm text-gray-500 mb-6">
+          {productReviews.reviewCount > 0
+            ? `★ ${(productReviews.avgRating ?? 0).toFixed(1)} · 리뷰 ${productReviews.reviewCount}개`
+            : "아직 리뷰가 없습니다"}
+        </p>
+      )}
 
       {product.description && (
         <p className="text-sm text-gray-600 leading-relaxed mb-8">{product.description}</p>
