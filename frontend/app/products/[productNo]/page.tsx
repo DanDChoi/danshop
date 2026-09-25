@@ -16,6 +16,10 @@ import {
   type ProductReviews,
 } from "@/lib/api";
 
+function formatDate(iso: string): string {
+  return iso.slice(0, 10).split("-").join(".");
+}
+
 export default function ProductDetailPage() {
   const params = useParams<{ productNo: string }>();
   const productNo = Number(params.productNo);
@@ -193,6 +197,29 @@ function ProductDetail({ productNo }: { productNo: number }) {
         <p className="text-sm text-green-600 mt-3">장바구니에 담았습니다.</p>
       )}
       {addStatus === "error" && <p className="text-sm text-red-500 mt-3">{addError}</p>}
+
+      {accessToken && productReviews && productReviews.reviews.length > 0 && (
+        <div className="mt-10 pt-8 border-t border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-500 mb-3">
+            리뷰 {productReviews.reviewCount}개
+          </h2>
+          <div className="flex flex-col gap-3">
+            {productReviews.reviews.map((review) => (
+              <div key={review.id} className="rounded-xl border border-gray-100 p-4">
+                <div className="flex items-center justify-between gap-4 mb-1">
+                  <p className="text-sm font-semibold text-gray-900">{review.userName}</p>
+                  <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
+                </div>
+                <p className="text-sm text-gray-500 mb-1">
+                  {"★".repeat(review.rating)}
+                  {"☆".repeat(5 - review.rating)}
+                </p>
+                <p className="text-sm text-gray-700 leading-relaxed">{review.content}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </main>
   );
 }
