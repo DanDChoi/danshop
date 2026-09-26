@@ -41,6 +41,10 @@ function ProductDetail({ productNo }: { productNo: number }) {
 
   const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
 
+  // 리뷰 작성 폼 (UI만, 제출 연결은 다음 단계)
+  const [reviewRating, setReviewRating] = useState(5);
+  const [reviewContent, setReviewContent] = useState("");
+
   useEffect(() => {
     let cancelled = false;
 
@@ -198,8 +202,42 @@ function ProductDetail({ productNo }: { productNo: number }) {
       )}
       {addStatus === "error" && <p className="text-sm text-red-500 mt-3">{addError}</p>}
 
-      {accessToken && productReviews && productReviews.reviews.length > 0 && (
+      {accessToken && (
         <div className="mt-10 pt-8 border-t border-gray-100">
+          <h2 className="text-sm font-semibold text-gray-500 mb-3">리뷰 작성</h2>
+          <div className="rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
+            <div className="flex gap-1">
+              {[1, 2, 3, 4, 5].map((n) => (
+                <button
+                  key={n}
+                  type="button"
+                  onClick={() => setReviewRating(n)}
+                  aria-label={`${n}점`}
+                  className="text-lg leading-none"
+                >
+                  <span className={n <= reviewRating ? "text-gray-900" : "text-gray-300"}>★</span>
+                </button>
+              ))}
+            </div>
+            <textarea
+              value={reviewContent}
+              onChange={(e) => setReviewContent(e.target.value)}
+              placeholder="상품에 대한 리뷰를 남겨주세요"
+              rows={3}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+            <button
+              type="button"
+              className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+            >
+              리뷰 등록
+            </button>
+          </div>
+        </div>
+      )}
+
+      {accessToken && productReviews && productReviews.reviews.length > 0 && (
+        <div className="mt-8">
           <h2 className="text-sm font-semibold text-gray-500 mb-3">
             리뷰 {productReviews.reviewCount}개
           </h2>
