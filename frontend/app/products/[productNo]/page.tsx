@@ -11,6 +11,7 @@ import {
   addToWishlist,
   removeFromWishlist,
   getProductReviews,
+  createReview,
   ApiError,
   type Product,
   type ProductReviews,
@@ -41,9 +42,12 @@ function ProductDetail({ productNo }: { productNo: number }) {
 
   const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
 
-  // 리뷰 작성 폼 (UI만, 제출 연결은 다음 단계)
   const [reviewRating, setReviewRating] = useState(5);
   const [reviewContent, setReviewContent] = useState("");
+  const [reviewSubmitStatus, setReviewSubmitStatus] = useState<"idle" | "loading" | "error">(
+    "idle"
+  );
+  const [reviewSubmitError, setReviewSubmitError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -97,6 +101,26 @@ function ProductDetail({ productNo }: { productNo: number }) {
       /* 실패 시 상태 유지 */
     } finally {
       setWishBusy(false);
+    }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!accessToken) return;
+    setReviewSubmitStatus("loading");
+    setReviewSubmitError("");
+    try {
+      await createReview(accessToken, productNo, {
+        rating: reviewRating,
+        content: reviewContent,
+      });
+      setReviewContent("");
+      setReviewRating(5);
+      const refreshed = await getProductReviews(accessToken, productNo);
+      setProductReviews(refreshed);
+      setReviewSubmitStatus("idle");
+    } catch (err) {
+      setReviewSubmitStatus("error");
+      setReviewSubmitError(err instanceof ApiError ? err.message : "리뷰 등록에 실패했습니다.");
     }
   };
 
@@ -226,11 +250,14 @@ function ProductDetail({ productNo }: { productNo: number }) {
               rows={3}
               className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
             />
+            {reviewSubmitError && <p className="text-sm text-red-500">{reviewSubmitError}</p>}
             <button
               type="button"
-              className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+              onClick={handleSubmitReview}
+              disabled={reviewSubmitStatus === "loading" || !reviewContent.trim()}
+              className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
             >
-              리뷰 등록
+              {reviewSubmitStatus === "loading" ? "등록 중..." : "리뷰 등록"}
             </button>
           </div>
         </div>
