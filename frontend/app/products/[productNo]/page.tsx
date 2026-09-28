@@ -12,6 +12,7 @@ import {
   removeFromWishlist,
   getProductReviews,
   createReview,
+  deleteReview,
   ApiError,
   type Product,
   type ProductReviews,
@@ -29,7 +30,7 @@ export default function ProductDetailPage() {
 }
 
 function ProductDetail({ productNo }: { productNo: number }) {
-  const { accessToken } = useAuth();
+  const { accessToken, userId } = useAuth();
 
   const [product, setProduct] = useState<Product | null>(null);
   const [error, setError] = useState("");
@@ -48,6 +49,10 @@ function ProductDetail({ productNo }: { productNo: number }) {
     "idle"
   );
   const [reviewSubmitError, setReviewSubmitError] = useState("");
+
+  const [confirmDeleteReviewId, setConfirmDeleteReviewId] = useState<number | null>(null);
+  const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
+  const [deleteReviewError, setDeleteReviewError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -121,6 +126,22 @@ function ProductDetail({ productNo }: { productNo: number }) {
     } catch (err) {
       setReviewSubmitStatus("error");
       setReviewSubmitError(err instanceof ApiError ? err.message : "리뷰 등록에 실패했습니다.");
+    }
+  };
+
+  const handleDeleteReview = async (reviewId: number) => {
+    if (!accessToken) return;
+    setDeleteReviewError("");
+    setDeletingReviewId(reviewId);
+    try {
+      await deleteReview(accessToken, reviewId);
+      const refreshed = await getProductReviews(accessToken, productNo);
+      setProductReviews(refreshed);
+      setConfirmDeleteReviewId(null);
+    } catch (err) {
+      setDeleteReviewError(err instanceof ApiError ? err.message : "리뷰 삭제에 실패했습니다.");
+    } finally {
+      setDeletingReviewId(null);
     }
   };
 
@@ -268,6 +289,9 @@ function ProductDetail({ productNo }: { productNo: number }) {
           <h2 className="text-sm font-semibold text-gray-500 mb-3">
             리뷰 {productReviews.reviewCount}개
           </h2>
+          {deleteReviewError && (
+            <p className="text-sm text-red-500 mb-3">{deleteReviewError}</p>
+          )}
           <div className="flex flex-col gap-3">
             {productReviews.reviews.map((review) => (
               <div key={review.id} className="rounded-xl border border-gray-100 p-4">
@@ -280,6 +304,37 @@ function ProductDetail({ productNo }: { productNo: number }) {
                   {"☆".repeat(5 - review.rating)}
                 </p>
                 <p className="text-sm text-gray-700 leading-relaxed">{review.content}</p>
+
+                {review.userId === userId && (
+                  <div className="mt-2">
+                    {confirmDeleteReviewId === review.id ? (
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs text-gray-500">삭제할까요?</span>
+                        <button
+                          onClick={() => handleDeleteReview(review.id)}
+                          disabled={deletingReviewId === review.id}
+                          className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
+                        >
+                          {deletingReviewId === review.id ? "삭제 중..." : "삭제"}
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteReviewId(null)}
+                          disabled={deletingReviewId === review.id}
+                          className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-50"
+                        >
+                          취소
+                        </button>
+                      </div>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteReviewId(review.id)}
+                        className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                )}
               </div>
             ))}
           </div>
