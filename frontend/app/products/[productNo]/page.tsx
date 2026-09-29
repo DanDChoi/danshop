@@ -12,10 +12,12 @@ import {
   removeFromWishlist,
   getProductReviews,
   createReview,
+  updateReview,
   deleteReview,
   ApiError,
   type Product,
   type ProductReviews,
+  type ReviewItem,
 } from "@/lib/api";
 
 function formatDate(iso: string): string {
@@ -53,6 +55,12 @@ function ProductDetail({ productNo }: { productNo: number }) {
   const [confirmDeleteReviewId, setConfirmDeleteReviewId] = useState<number | null>(null);
   const [deletingReviewId, setDeletingReviewId] = useState<number | null>(null);
   const [deleteReviewError, setDeleteReviewError] = useState("");
+
+  const [editingReviewId, setEditingReviewId] = useState<number | null>(null);
+  const [editRating, setEditRating] = useState(5);
+  const [editContent, setEditContent] = useState("");
+  const [editReviewStatus, setEditReviewStatus] = useState<"idle" | "loading" | "error">("idle");
+  const [editReviewError, setEditReviewError] = useState("");
 
   useEffect(() => {
     let cancelled = false;
@@ -142,6 +150,32 @@ function ProductDetail({ productNo }: { productNo: number }) {
       setDeleteReviewError(err instanceof ApiError ? err.message : "리뷰 삭제에 실패했습니다.");
     } finally {
       setDeletingReviewId(null);
+    }
+  };
+
+  const startEditReview = (review: ReviewItem) => {
+    setEditingReviewId(review.id);
+    setEditRating(review.rating);
+    setEditContent(review.content);
+    setEditReviewError("");
+  };
+
+  const handleSaveEditReview = async () => {
+    if (!accessToken || editingReviewId === null) return;
+    setEditReviewStatus("loading");
+    setEditReviewError("");
+    try {
+      await updateReview(accessToken, editingReviewId, {
+        rating: editRating,
+        content: editContent,
+      });
+      const refreshed = await getProductReviews(accessToken, productNo);
+      setProductReviews(refreshed);
+      setEditingReviewId(null);
+      setEditReviewStatus("idle");
+    } catch (err) {
+      setEditReviewStatus("error");
+      setEditReviewError(err instanceof ApiError ? err.message : "리뷰 수정에 실패했습니다.");
     }
   };
 
@@ -293,50 +327,103 @@ function ProductDetail({ productNo }: { productNo: number }) {
             <p className="text-sm text-red-500 mb-3">{deleteReviewError}</p>
           )}
           <div className="flex flex-col gap-3">
-            {productReviews.reviews.map((review) => (
-              <div key={review.id} className="rounded-xl border border-gray-100 p-4">
-                <div className="flex items-center justify-between gap-4 mb-1">
-                  <p className="text-sm font-semibold text-gray-900">{review.userName}</p>
-                  <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
-                </div>
-                <p className="text-sm text-gray-500 mb-1">
-                  {"★".repeat(review.rating)}
-                  {"☆".repeat(5 - review.rating)}
-                </p>
-                <p className="text-sm text-gray-700 leading-relaxed">{review.content}</p>
-
-                {review.userId === userId && (
-                  <div className="mt-2">
-                    {confirmDeleteReviewId === review.id ? (
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs text-gray-500">삭제할까요?</span>
-                        <button
-                          onClick={() => handleDeleteReview(review.id)}
-                          disabled={deletingReviewId === review.id}
-                          className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
-                        >
-                          {deletingReviewId === review.id ? "삭제 중..." : "삭제"}
-                        </button>
-                        <button
-                          onClick={() => setConfirmDeleteReviewId(null)}
-                          disabled={deletingReviewId === review.id}
-                          className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-50"
-                        >
-                          취소
-                        </button>
-                      </div>
-                    ) : (
+            {productReviews.reviews.map((review) =>
+              editingReviewId === review.id ? (
+                <div key={review.id} className="rounded-xl border border-gray-300 p-4">
+                  <div className="flex gap-1 mb-2">
+                    {[1, 2, 3, 4, 5].map((n) => (
                       <button
-                        onClick={() => setConfirmDeleteReviewId(review.id)}
-                        className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                        key={n}
+                        type="button"
+                        onClick={() => setEditRating(n)}
+                        aria-label={`${n}점`}
+                        className="text-lg leading-none"
                       >
-                        삭제
+                        <span className={n <= editRating ? "text-gray-900" : "text-gray-300"}>
+                          ★
+                        </span>
                       </button>
-                    )}
+                    ))}
                   </div>
-                )}
-              </div>
-            ))}
+                  <textarea
+                    value={editContent}
+                    onChange={(e) => setEditContent(e.target.value)}
+                    rows={3}
+                    className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900 mb-2"
+                  />
+                  {editReviewError && (
+                    <p className="text-sm text-red-500 mb-2">{editReviewError}</p>
+                  )}
+                  <div className="flex gap-2">
+                    <button
+                      onClick={handleSaveEditReview}
+                      disabled={editReviewStatus === "loading" || !editContent.trim()}
+                      className="rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
+                    >
+                      {editReviewStatus === "loading" ? "저장 중..." : "저장"}
+                    </button>
+                    <button
+                      onClick={() => setEditingReviewId(null)}
+                      disabled={editReviewStatus === "loading"}
+                      className="rounded-lg border border-gray-200 text-sm font-medium px-4 py-2 hover:border-gray-400 transition-colors disabled:opacity-50"
+                    >
+                      취소
+                    </button>
+                  </div>
+                </div>
+              ) : (
+                <div key={review.id} className="rounded-xl border border-gray-100 p-4">
+                  <div className="flex items-center justify-between gap-4 mb-1">
+                    <p className="text-sm font-semibold text-gray-900">{review.userName}</p>
+                    <span className="text-xs text-gray-400">{formatDate(review.createdAt)}</span>
+                  </div>
+                  <p className="text-sm text-gray-500 mb-1">
+                    {"★".repeat(review.rating)}
+                    {"☆".repeat(5 - review.rating)}
+                  </p>
+                  <p className="text-sm text-gray-700 leading-relaxed">{review.content}</p>
+
+                  {review.userId === userId && (
+                    <div className="mt-2">
+                      {confirmDeleteReviewId === review.id ? (
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs text-gray-500">삭제할까요?</span>
+                          <button
+                            onClick={() => handleDeleteReview(review.id)}
+                            disabled={deletingReviewId === review.id}
+                            className="text-xs font-medium text-red-500 hover:text-red-600 disabled:opacity-50"
+                          >
+                            {deletingReviewId === review.id ? "삭제 중..." : "삭제"}
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteReviewId(null)}
+                            disabled={deletingReviewId === review.id}
+                            className="text-xs text-gray-400 hover:text-gray-700 disabled:opacity-50"
+                          >
+                            취소
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="flex items-center gap-3">
+                          <button
+                            onClick={() => startEditReview(review)}
+                            className="text-xs text-gray-400 hover:text-gray-700 transition-colors"
+                          >
+                            수정
+                          </button>
+                          <button
+                            onClick={() => setConfirmDeleteReviewId(review.id)}
+                            className="text-xs text-gray-400 hover:text-red-500 transition-colors"
+                          >
+                            삭제
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )
+            )}
           </div>
         </div>
       )}
