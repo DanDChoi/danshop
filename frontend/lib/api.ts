@@ -536,6 +536,23 @@ export function getPointBalance(token: string): Promise<{ pointBalance: number }
   });
 }
 
+export type PointType = "EARN" | "USE" | "EARN_CANCEL" | "REFUND";
+
+export type PointHistoryEntry = {
+  id: number;
+  signedAmount: number; // 양수 = 적립, 음수 = 사용
+  type: PointType;
+  description: string;
+  orderId: number | null;
+  createdAt: string;
+};
+
+export function getPointHistory(token: string): Promise<PointHistoryEntry[]> {
+  return request<PointHistoryEntry[]>("/points/history", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ─────────────────────────────────────────────
 // 위시리스트 (회원 전용)
 // ─────────────────────────────────────────────
