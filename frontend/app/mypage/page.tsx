@@ -1,14 +1,35 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
-import { getMe, changePassword, ApiError, type UserProfile } from "@/lib/api";
+import {
+  getMe,
+  changePassword,
+  getPointHistory,
+  ApiError,
+  type UserProfile,
+  type PointHistoryEntry,
+  type PointType,
+} from "@/lib/api";
 import { useRequireAuth } from "@/lib/use-require-auth";
+
+function formatDate(iso: string): string {
+  return iso.slice(0, 10).split("-").join(".");
+}
+
+const POINT_TYPE_LABELS: Record<PointType, string> = {
+  EARN: "적립",
+  USE: "사용",
+  EARN_CANCEL: "적립 취소",
+  REFUND: "환불",
+};
 
 export default function MyPage() {
   const accessToken = useRequireAuth();
 
   const [profile, setProfile] = useState<UserProfile | null>(null);
   const [error, setError] = useState("");
+
+  const [pointHistory, setPointHistory] = useState<PointHistoryEntry[]>([]);
 
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
@@ -29,6 +50,14 @@ export default function MyPage() {
         if (!cancelled) {
           setError(err instanceof ApiError ? err.message : "프로필을 불러오지 못했습니다.");
         }
+      });
+
+    getPointHistory(accessToken)
+      .then((data) => {
+        if (!cancelled) setPointHistory(data);
+      })
+      .catch(() => {
+        /* 포인트 내역 조회 실패는 무시 — 섹션을 그냥 안 보여준다 */
       });
 
     return () => {
@@ -101,6 +130,31 @@ export default function MyPage() {
           <span className="text-gray-900">{profile.pointBalance.toLocaleString()}P</span>
         </div>
       </div>
+
+      {pointHistory.length > 0 && (
+        <div className="mb-10">
+          <h2 className="text-sm font-semibold text-gray-500 mb-3">포인트 내역</h2>
+          <div className="flex flex-col gap-2">
+            {pointHistory.map((entry) => (
+              <div
+                key={entry.id}
+                className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-3"
+              >
+                <div className="min-w-0">
+                  <p className="text-sm text-gray-900 truncate">{entry.description}</p>
+                  <p className="text-xs text-gray-400">
+                    {POINT_TYPE_LABELS[entry.type]} · {formatDate(entry.createdAt)}
+                  </p>
+                </div>
+                <p className="shrink-0 text-sm font-medium text-gray-900">
+                  {entry.signedAmount > 0 ? "+" : ""}
+                  {entry.signedAmount.toLocaleString()}P
+                </p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <h2 className="text-sm font-semibold text-gray-500 mb-3">비밀번호 변경</h2>
       <form onSubmit={handleChangePassword} className="flex flex-col gap-4">
