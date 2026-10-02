@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, FormEvent } from "react";
+import Link from "next/link";
 import {
   getMe,
   changePassword,
@@ -144,9 +145,24 @@ export default function MyPage() {
                   <p className="text-sm text-gray-900 truncate">{entry.description}</p>
                   <p className="text-xs text-gray-400">
                     {POINT_TYPE_LABELS[entry.type]} · {formatDate(entry.createdAt)}
+                    {entry.orderId != null && (
+                      <>
+                        {" · "}
+                        <Link
+                          href={`/orders/${entry.orderId}`}
+                          className="underline hover:text-gray-700"
+                        >
+                          주문 #{entry.orderId}
+                        </Link>
+                      </>
+                    )}
                   </p>
                 </div>
-                <p className="shrink-0 text-sm font-medium text-gray-900">
+                <p
+                  className={`shrink-0 text-sm font-medium ${
+                    entry.signedAmount > 0 ? "text-green-600" : "text-red-500"
+                  }`}
+                >
                   {entry.signedAmount > 0 ? "+" : ""}
                   {entry.signedAmount.toLocaleString()}P
                 </p>
