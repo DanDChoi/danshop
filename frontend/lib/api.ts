@@ -661,3 +661,29 @@ export function deleteReview(token: string, reviewId: number): Promise<string> {
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+// ─────────────────────────────────────────────
+// 관리자 통계 (ADMIN 전용)
+// ─────────────────────────────────────────────
+
+export type SalesStat = {
+  totalSales: number;
+  orderCount: number;
+  from: string | null;
+  to: string | null;
+};
+
+// from/to는 LocalDateTime ISO 문자열(예: 2026-10-01T00:00:00), 둘 다 생략 가능.
+export function getSalesStat(
+  token: string,
+  params: { from?: string; to?: string } = {}
+): Promise<SalesStat> {
+  const query = new URLSearchParams();
+  if (params.from) query.set("from", params.from);
+  if (params.to) query.set("to", params.to);
+
+  const qs = query.toString();
+  return request<SalesStat>(`/admin/stats/sales${qs ? `?${qs}` : ""}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
