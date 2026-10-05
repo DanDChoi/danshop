@@ -687,3 +687,16 @@ export function getSalesStat(
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export type ProductSales = {
+  productId: number;
+  productName: string;
+  totalQuantity: number;
+  totalRevenue: number;
+};
+
+export function getTopProductsBySales(token: string, limit = 5): Promise<ProductSales[]> {
+  return request<ProductSales[]>(`/admin/stats/products/top?limit=${limit}`, {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
