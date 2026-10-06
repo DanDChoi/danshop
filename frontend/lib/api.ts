@@ -700,3 +700,14 @@ export function getTopProductsBySales(token: string, limit = 5): Promise<Product
     headers: { Authorization: `Bearer ${token}` },
   });
 }
+
+export type OrderStatusStat = {
+  status: OrderStatus;
+  count: number;
+};
+
+export function getOrderStatusStat(token: string): Promise<OrderStatusStat[]> {
+  return request<OrderStatusStat[]>("/admin/stats/orders", {
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
