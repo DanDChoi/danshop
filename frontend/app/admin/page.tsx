@@ -33,6 +33,13 @@ export default function AdminPage() {
           <p className="text-sm font-semibold text-gray-900 mb-1">주문 관리</p>
           <p className="text-sm text-gray-500">전체 주문 조회 · 상태 변경</p>
         </Link>
+        <Link
+          href="/admin/stats"
+          className="rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+        >
+          <p className="text-sm font-semibold text-gray-900 mb-1">통계</p>
+          <p className="text-sm text-gray-500">매출 · 인기 상품 · 주문 상태</p>
+        </Link>
       </div>
     </main>
   );
