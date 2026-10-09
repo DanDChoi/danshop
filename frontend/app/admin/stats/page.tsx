@@ -4,7 +4,13 @@ import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useRequireAdmin } from "@/lib/use-require-admin";
-import { getSalesStat, ApiError, type SalesStat } from "@/lib/api";
+import {
+  getSalesStat,
+  getTopProductsBySales,
+  ApiError,
+  type SalesStat,
+  type ProductSales,
+} from "@/lib/api";
 
 function toFromDateTime(date: string): string {
   return `${date}T00:00:00`;
@@ -25,6 +31,10 @@ export default function AdminStatsPage() {
   const [salesStat, setSalesStat] = useState<SalesStat | null>(null);
   const [salesLoading, setSalesLoading] = useState(true);
   const [salesError, setSalesError] = useState("");
+
+  const [topProducts, setTopProducts] = useState<ProductSales[]>([]);
+  const [topProductsLoading, setTopProductsLoading] = useState(true);
+  const [topProductsError, setTopProductsError] = useState("");
 
   useEffect(() => {
     if (!isAdmin || !accessToken) return;
@@ -48,6 +58,31 @@ export default function AdminStatsPage() {
       cancelled = true;
     };
   }, [isAdmin, accessToken, range]);
+
+  useEffect(() => {
+    if (!isAdmin || !accessToken) return;
+
+    let cancelled = false;
+
+    getTopProductsBySales(accessToken, 5)
+      .then((data) => {
+        if (!cancelled) setTopProducts(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setTopProductsError(
+            err instanceof ApiError ? err.message : "인기 상품을 불러오지 못했습니다."
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setTopProductsLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, accessToken]);
 
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -126,7 +161,34 @@ export default function AdminStatsPage() {
 
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-gray-500 mb-3">인기 상품</h2>
-        <p className="text-sm text-gray-400">준비 중</p>
+
+        {topProductsError && <p className="text-sm text-red-500">{topProductsError}</p>}
+
+        {topProductsLoading ? (
+          <p className="text-sm text-gray-400">불러오는 중...</p>
+        ) : topProducts.length === 0 ? (
+          <p className="text-sm text-gray-400">판매 데이터가 없습니다.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {topProducts.map((product, index) => (
+              <div
+                key={product.productId}
+                className="flex items-center justify-between gap-4 rounded-xl border border-gray-100 p-3"
+              >
+                <div className="flex items-center gap-3 min-w-0">
+                  <span className="text-sm font-semibold text-gray-400 w-5">{index + 1}</span>
+                  <p className="text-sm text-gray-900 truncate">{product.productName}</p>
+                </div>
+                <div className="shrink-0 text-right">
+                  <p className="text-sm font-medium text-gray-900">
+                    {product.totalRevenue.toLocaleString()}원
+                  </p>
+                  <p className="text-xs text-gray-400">{product.totalQuantity}개 판매</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
 
       <section>
