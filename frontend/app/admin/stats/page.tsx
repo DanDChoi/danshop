@@ -7,10 +7,13 @@ import { useRequireAdmin } from "@/lib/use-require-admin";
 import {
   getSalesStat,
   getTopProductsBySales,
+  getOrderStatusStat,
   ApiError,
   type SalesStat,
   type ProductSales,
+  type OrderStatusStat,
 } from "@/lib/api";
+import { ORDER_STATUS_LABELS } from "@/lib/order";
 
 function toFromDateTime(date: string): string {
   return `${date}T00:00:00`;
@@ -35,6 +38,10 @@ export default function AdminStatsPage() {
   const [topProducts, setTopProducts] = useState<ProductSales[]>([]);
   const [topProductsLoading, setTopProductsLoading] = useState(true);
   const [topProductsError, setTopProductsError] = useState("");
+
+  const [orderStatusStat, setOrderStatusStat] = useState<OrderStatusStat[]>([]);
+  const [orderStatusLoading, setOrderStatusLoading] = useState(true);
+  const [orderStatusError, setOrderStatusError] = useState("");
 
   useEffect(() => {
     if (!isAdmin || !accessToken) return;
@@ -84,6 +91,31 @@ export default function AdminStatsPage() {
     };
   }, [isAdmin, accessToken]);
 
+  useEffect(() => {
+    if (!isAdmin || !accessToken) return;
+
+    let cancelled = false;
+
+    getOrderStatusStat(accessToken)
+      .then((data) => {
+        if (!cancelled) setOrderStatusStat(data);
+      })
+      .catch((err) => {
+        if (!cancelled) {
+          setOrderStatusError(
+            err instanceof ApiError ? err.message : "주문 상태 통계를 불러오지 못했습니다."
+          );
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setOrderStatusLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, accessToken]);
+
   const handleSearch = (e: FormEvent) => {
     e.preventDefault();
     setSalesLoading(true);
@@ -101,6 +133,8 @@ export default function AdminStatsPage() {
       </main>
     );
   }
+
+  const maxOrderStatusCount = Math.max(1, ...orderStatusStat.map((s) => s.count));
 
   return (
     <main className="max-w-3xl mx-auto px-4 md:px-6 py-12 md:py-16">
@@ -193,7 +227,33 @@ export default function AdminStatsPage() {
 
       <section>
         <h2 className="text-sm font-semibold text-gray-500 mb-3">주문 상태</h2>
-        <p className="text-sm text-gray-400">준비 중</p>
+
+        {orderStatusError && <p className="text-sm text-red-500">{orderStatusError}</p>}
+
+        {orderStatusLoading ? (
+          <p className="text-sm text-gray-400">불러오는 중...</p>
+        ) : orderStatusStat.length === 0 ? (
+          <p className="text-sm text-gray-400">주문 데이터가 없습니다.</p>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {orderStatusStat.map((stat) => (
+              <div key={stat.status} className="flex items-center gap-3">
+                <span className="w-20 shrink-0 text-sm text-gray-500">
+                  {ORDER_STATUS_LABELS[stat.status]}
+                </span>
+                <div className="flex-1 h-2 rounded-full bg-gray-100 overflow-hidden">
+                  <div
+                    className="h-full bg-gray-900"
+                    style={{ width: `${(stat.count / maxOrderStatusCount) * 100}%` }}
+                  />
+                </div>
+                <span className="w-10 shrink-0 text-sm text-right text-gray-900">
+                  {stat.count}
+                </span>
+              </div>
+            ))}
+          </div>
+        )}
       </section>
     </main>
   );
