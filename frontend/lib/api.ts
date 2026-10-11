@@ -526,6 +526,24 @@ export function issueCoupon(token: string, couponId: number): Promise<string> {
   });
 }
 
+export type CouponPayload = {
+  name: string;
+  discountType: DiscountType;
+  discountValue: number;
+  minOrderAmount: number;
+  totalQuantity: number;
+  expiresAt: string; // LocalDateTime ISO 문자열, 미래 날짜여야 함
+};
+
+// ADMIN 전용.
+export function createCoupon(token: string, payload: CouponPayload): Promise<string> {
+  return request<string>("/coupons", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 // ─────────────────────────────────────────────
 // 포인트 (회원 전용)
 // ─────────────────────────────────────────────
