@@ -27,6 +27,13 @@ export default function AdminPage() {
           <p className="text-sm text-gray-500">상품 등록·수정·삭제</p>
         </Link>
         <Link
+          href="/admin/coupons"
+          className="rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
+        >
+          <p className="text-sm font-semibold text-gray-900 mb-1">쿠폰 관리</p>
+          <p className="text-sm text-gray-500">쿠폰 생성 · 목록 조회</p>
+        </Link>
+        <Link
           href="/admin/orders"
           className="rounded-xl border border-gray-100 p-4 hover:border-gray-300 transition-colors"
         >
