@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useRequireAdmin } from "@/lib/use-require-admin";
-import { getAvailableCoupons, ApiError, type Coupon } from "@/lib/api";
+import { getAvailableCoupons, ApiError, type Coupon, type DiscountType } from "@/lib/api";
 import { formatDiscount, formatCouponDate } from "@/lib/coupon";
 
 export default function AdminCouponsPage() {
@@ -14,6 +14,15 @@ export default function AdminCouponsPage() {
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+
+  // 쿠폰 생성 폼 (UI만, 제출 연결은 다음 단계)
+  const [showCreate, setShowCreate] = useState(false);
+  const [name, setName] = useState("");
+  const [discountType, setDiscountType] = useState<DiscountType>("RATE");
+  const [discountValue, setDiscountValue] = useState("");
+  const [minOrderAmount, setMinOrderAmount] = useState("");
+  const [totalQuantity, setTotalQuantity] = useState("");
+  const [expiresAt, setExpiresAt] = useState("");
 
   useEffect(() => {
     if (!isAdmin || !accessToken) return;
@@ -52,9 +61,82 @@ export default function AdminCouponsPage() {
         ← 관리자
       </Link>
 
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mt-4 mb-6">
-        쿠폰 관리
-      </h1>
+      <div className="flex items-baseline justify-between mt-4 mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">쿠폰 관리</h1>
+        <button
+          onClick={() => setShowCreate((v) => !v)}
+          className="rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+        >
+          {showCreate ? "취소" : "쿠폰 생성"}
+        </button>
+      </div>
+
+      {showCreate && (
+        <div className="rounded-xl border border-gray-100 p-4 mb-6 flex flex-col gap-3">
+          <input
+            type="text"
+            placeholder="쿠폰 이름"
+            value={name}
+            onChange={(e) => setName(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+
+          <div className="grid grid-cols-2 gap-2">
+            <select
+              value={discountType}
+              onChange={(e) => setDiscountType(e.target.value as DiscountType)}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            >
+              <option value="RATE">정률(%)</option>
+              <option value="AMOUNT">정액(원)</option>
+            </select>
+            <input
+              type="number"
+              placeholder="할인 값"
+              value={discountValue}
+              onChange={(e) => setDiscountValue(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              placeholder="최소 주문금액"
+              value={minOrderAmount}
+              onChange={(e) => setMinOrderAmount(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+            <input
+              type="number"
+              placeholder="발급 수량"
+              value={totalQuantity}
+              onChange={(e) => setTotalQuantity(e.target.value)}
+              className="rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+
+          <div>
+            <label htmlFor="expiresAt" className="block text-xs text-gray-400 mb-1">
+              만료일시
+            </label>
+            <input
+              id="expiresAt"
+              type="datetime-local"
+              value={expiresAt}
+              onChange={(e) => setExpiresAt(e.target.value)}
+              className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+            />
+          </div>
+
+          <button
+            type="button"
+            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+          >
+            생성
+          </button>
+        </div>
+      )}
 
       {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
 
