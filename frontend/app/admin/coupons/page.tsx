@@ -4,7 +4,13 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { useRequireAdmin } from "@/lib/use-require-admin";
-import { getAvailableCoupons, ApiError, type Coupon, type DiscountType } from "@/lib/api";
+import {
+  getAvailableCoupons,
+  createCoupon,
+  ApiError,
+  type Coupon,
+  type DiscountType,
+} from "@/lib/api";
 import { formatDiscount, formatCouponDate } from "@/lib/coupon";
 
 export default function AdminCouponsPage() {
@@ -23,6 +29,8 @@ export default function AdminCouponsPage() {
   const [minOrderAmount, setMinOrderAmount] = useState("");
   const [totalQuantity, setTotalQuantity] = useState("");
   const [expiresAt, setExpiresAt] = useState("");
+  const [isCreating, setIsCreating] = useState(false);
+  const [createError, setCreateError] = useState("");
 
   useEffect(() => {
     if (!isAdmin || !accessToken) return;
@@ -46,6 +54,34 @@ export default function AdminCouponsPage() {
       cancelled = true;
     };
   }, [isAdmin, accessToken]);
+
+  const handleCreate = async () => {
+    if (!accessToken) return;
+    setCreateError("");
+    setIsCreating(true);
+    try {
+      await createCoupon(accessToken, {
+        name,
+        discountType,
+        discountValue: Number(discountValue),
+        minOrderAmount: Number(minOrderAmount),
+        totalQuantity: Number(totalQuantity),
+        expiresAt: expiresAt.length === 16 ? `${expiresAt}:00` : expiresAt,
+      });
+      setName("");
+      setDiscountValue("");
+      setMinOrderAmount("");
+      setTotalQuantity("");
+      setExpiresAt("");
+      setShowCreate(false);
+      const refreshed = await getAvailableCoupons(accessToken);
+      setCoupons(refreshed);
+    } catch (err) {
+      setCreateError(err instanceof ApiError ? err.message : "쿠폰 생성에 실패했습니다.");
+    } finally {
+      setIsCreating(false);
+    }
+  };
 
   if (!isAdmin) {
     return (
@@ -129,11 +165,22 @@ export default function AdminCouponsPage() {
             />
           </div>
 
+          {createError && <p className="text-sm text-red-500">{createError}</p>}
+
           <button
             type="button"
-            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+            onClick={handleCreate}
+            disabled={
+              isCreating ||
+              !name.trim() ||
+              !discountValue ||
+              !minOrderAmount ||
+              !totalQuantity ||
+              !expiresAt
+            }
+            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            생성
+            {isCreating ? "생성 중..." : "생성"}
           </button>
         </div>
       )}
