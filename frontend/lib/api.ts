@@ -178,6 +178,15 @@ export function changePassword(token: string, payload: ChangePasswordPayload): P
   });
 }
 
+// 서버에 저장된 refresh token을 무효화한다(Redis). 실패해도 클라이언트 쪽
+// 토큰 삭제는 호출하는 쪽에서 항상 보장해야 한다.
+export function logout(token: string): Promise<string> {
+  return request<string>("/user/logout", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ─────────────────────────────────────────────
 // 식별(회원/게스트) 공통 헤더
 // ─────────────────────────────────────────────
