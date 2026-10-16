@@ -1,7 +1,7 @@
 "use client";
 
 import { createContext, useContext, useSyncExternalStore, ReactNode } from "react";
-import { registerAuthBridge, type TokenResponse } from "./api";
+import { registerAuthBridge, logout as logoutRequest, type TokenResponse } from "./api";
 import { getRoleFromToken } from "./jwt";
 
 const STORAGE_KEY = "danshop-auth";
@@ -77,7 +77,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const logout = () => {
+    const accessToken = stored?.accessToken;
+    // 로컬 토큰 삭제는 서버 호출 성공 여부와 상관없이 항상 먼저/반드시 실행한다.
     setStored(null);
+    if (accessToken) {
+      logoutRequest(accessToken).catch(() => {
+        /* 서버 쪽 refresh token 무효화가 실패해도 로컬 로그아웃은 이미 끝난 상태 */
+      });
+    }
   };
 
   return (
