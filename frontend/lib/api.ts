@@ -625,6 +625,13 @@ export function moveWishlistToCart(token: string, productId: number): Promise<st
   });
 }
 
+export function clearWishlist(token: string): Promise<string> {
+  return request<string>("/wishlist", {
+    method: "DELETE",
+    headers: { Authorization: `Bearer ${token}` },
+  });
+}
+
 // ─────────────────────────────────────────────
 // 리뷰
 // ─────────────────────────────────────────────
