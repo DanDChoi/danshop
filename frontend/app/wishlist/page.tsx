@@ -6,6 +6,7 @@ import {
   getWishlist,
   removeFromWishlist,
   moveWishlistToCart,
+  clearWishlist,
   ApiError,
   type WishlistItem,
 } from "@/lib/api";
@@ -20,6 +21,7 @@ export default function WishlistPage() {
   const [actionError, setActionError] = useState("");
   const [notice, setNotice] = useState("");
   const [busyId, setBusyId] = useState<number | null>(null);
+  const [isClearing, setIsClearing] = useState(false);
 
   useEffect(() => {
     if (!accessToken) return;
@@ -75,6 +77,21 @@ export default function WishlistPage() {
     }
   };
 
+  const handleClearAll = async () => {
+    if (!accessToken) return;
+    setActionError("");
+    setNotice("");
+    setIsClearing(true);
+    try {
+      await clearWishlist(accessToken);
+      setItems([]);
+    } catch (err) {
+      setActionError(err instanceof ApiError ? err.message : "비우기에 실패했습니다.");
+    } finally {
+      setIsClearing(false);
+    }
+  };
+
   if (!accessToken) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
@@ -85,7 +102,18 @@ export default function WishlistPage() {
 
   return (
     <main className="max-w-2xl mx-auto px-4 md:px-6 py-12 md:py-16">
-      <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-6">위시리스트</h1>
+      <div className="flex items-center justify-between mb-6">
+        <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight">위시리스트</h1>
+        {items.length > 0 && (
+          <button
+            onClick={handleClearAll}
+            disabled={isClearing}
+            className="text-sm text-gray-400 hover:text-gray-700 transition-colors disabled:opacity-50"
+          >
+            {isClearing ? "비우는 중..." : "전체 비우기"}
+          </button>
+        )}
+      </div>
 
       {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
       {actionError && <p className="text-sm text-red-500 mb-4">{actionError}</p>}
