@@ -412,6 +412,31 @@ export type OrderDetail = {
   items: OrderItemDetail[];
 };
 
+export type OrderItemPayload = {
+  productId: number;
+  quantity: number;
+};
+
+export type CreateOrderPayload = {
+  couponId?: number;
+  usePoints?: number;
+  payAmount: number; // 클라이언트가 계산한 상품 금액 합계(할인 전)
+  postNo: string;
+  baseAddr: string;
+  detailAddr: string;
+  items: OrderItemPayload[];
+};
+
+// 장바구니를 거치지 않고 바로 주문 생성(바로구매). 응답은 안내 문구 문자열뿐이라
+// orderId는 알 수 없음 — 완료 후에는 /orders 목록으로 보내는 식으로 처리.
+export function createOrder(token: string, payload: CreateOrderPayload): Promise<string> {
+  return request<string>("/orders", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${token}` },
+    body: JSON.stringify(payload),
+  });
+}
+
 export function getOrders(token: string, page = 0, size = 10): Promise<Page<OrderSummary>> {
   return request<Page<OrderSummary>>(`/orders?page=${page}&size=${size}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -480,8 +505,27 @@ export function updateOrderStatusAdmin(
 }
 
 // ─────────────────────────────────────────────
-// 비회원 주문 조회
+// 비회원 주문
 // ─────────────────────────────────────────────
+
+export type GuestOrderPayload = {
+  ordererName: string;
+  ordererEmail: string;
+  ordererPhone: string;
+  payAmount: number;
+  postNo: string;
+  baseAddr: string;
+  detailAddr: string;
+  items: OrderItemPayload[];
+};
+
+// 장바구니를 거치지 않고 바로 주문 생성(바로구매, 비회원). 인증/게스트 토큰 불필요.
+export function createGuestOrder(payload: GuestOrderPayload): Promise<{ orderId: number }> {
+  return request<{ orderId: number }>("/guest/orders", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
 
 export function lookupGuestOrder(orderId: number, email: string): Promise<OrderDetail> {
   return request<OrderDetail>("/guest/orders/lookup", {
