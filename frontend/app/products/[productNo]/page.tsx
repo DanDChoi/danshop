@@ -43,6 +43,15 @@ function ProductDetail({ productNo }: { productNo: number }) {
   const [wished, setWished] = useState<boolean | null>(null);
   const [wishBusy, setWishBusy] = useState(false);
 
+  // 바로구매 폼 (UI만, 제출 연결은 다음 단계)
+  const [showBuyNow, setShowBuyNow] = useState(false);
+  const [buyNowPostNo, setBuyNowPostNo] = useState("");
+  const [buyNowBaseAddr, setBuyNowBaseAddr] = useState("");
+  const [buyNowDetailAddr, setBuyNowDetailAddr] = useState("");
+  const [buyNowOrdererName, setBuyNowOrdererName] = useState("");
+  const [buyNowOrdererEmail, setBuyNowOrdererEmail] = useState("");
+  const [buyNowOrdererPhone, setBuyNowOrdererPhone] = useState("");
+
   const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
 
   const [reviewRating, setReviewRating] = useState(5);
@@ -274,12 +283,83 @@ function ProductDetail({ productNo }: { productNo: number }) {
             <span className="ml-1.5 text-gray-600">찜</span>
           </button>
         )}
+
+        <button
+          type="button"
+          onClick={() => setShowBuyNow((v) => !v)}
+          disabled={product.stock === 0}
+          className="rounded-lg border border-gray-200 px-5 py-2.5 text-sm font-medium hover:border-gray-400 transition-colors disabled:opacity-50"
+        >
+          {showBuyNow ? "바로구매 취소" : "바로구매"}
+        </button>
       </div>
 
       {addStatus === "success" && (
         <p className="text-sm text-green-600 mt-3">장바구니에 담았습니다.</p>
       )}
       {addStatus === "error" && <p className="text-sm text-red-500 mt-3">{addError}</p>}
+
+      {showBuyNow && (
+        <div className="mt-4 rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
+          <h2 className="text-sm font-semibold text-gray-500">바로구매</h2>
+
+          {!accessToken && (
+            <>
+              <input
+                type="text"
+                placeholder="주문자 이름"
+                value={buyNowOrdererName}
+                onChange={(e) => setBuyNowOrdererName(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+              <input
+                type="email"
+                placeholder="이메일"
+                value={buyNowOrdererEmail}
+                onChange={(e) => setBuyNowOrdererEmail(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+              <input
+                type="text"
+                placeholder="연락처 (010-0000-0000)"
+                value={buyNowOrdererPhone}
+                onChange={(e) => setBuyNowOrdererPhone(e.target.value)}
+                className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+              />
+              <div className="h-px bg-gray-100" />
+            </>
+          )}
+
+          <input
+            type="text"
+            placeholder="우편번호"
+            value={buyNowPostNo}
+            onChange={(e) => setBuyNowPostNo(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <input
+            type="text"
+            placeholder="기본 주소"
+            value={buyNowBaseAddr}
+            onChange={(e) => setBuyNowBaseAddr(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+          <input
+            type="text"
+            placeholder="상세 주소"
+            value={buyNowDetailAddr}
+            onChange={(e) => setBuyNowDetailAddr(e.target.value)}
+            className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
+          />
+
+          <button
+            type="button"
+            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+          >
+            주문하기
+          </button>
+        </div>
+      )}
 
       {accessToken && (
         <div className="mt-10 pt-8 border-t border-gray-100">
