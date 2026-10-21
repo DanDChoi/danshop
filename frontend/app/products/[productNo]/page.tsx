@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
 import {
@@ -14,6 +15,7 @@ import {
   createReview,
   updateReview,
   deleteReview,
+  createOrder,
   ApiError,
   type Product,
   type ProductReviews,
@@ -51,6 +53,10 @@ function ProductDetail({ productNo }: { productNo: number }) {
   const [buyNowOrdererName, setBuyNowOrdererName] = useState("");
   const [buyNowOrdererEmail, setBuyNowOrdererEmail] = useState("");
   const [buyNowOrdererPhone, setBuyNowOrdererPhone] = useState("");
+  const [buyNowStatus, setBuyNowStatus] = useState<"idle" | "loading" | "success" | "error">(
+    "idle"
+  );
+  const [buyNowError, setBuyNowError] = useState("");
 
   const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
 
@@ -203,6 +209,31 @@ function ProductDetail({ productNo }: { productNo: number }) {
     }
   };
 
+  const handleBuyNow = async () => {
+    if (!product) return;
+
+    if (!accessToken) {
+      // 비회원 흐름은 다음 단계에서 연결한다.
+      return;
+    }
+
+    setBuyNowStatus("loading");
+    setBuyNowError("");
+    try {
+      await createOrder(accessToken, {
+        payAmount: product.price * quantity,
+        postNo: buyNowPostNo,
+        baseAddr: buyNowBaseAddr,
+        detailAddr: buyNowDetailAddr,
+        items: [{ productId: productNo, quantity }],
+      });
+      setBuyNowStatus("success");
+    } catch (err) {
+      setBuyNowStatus("error");
+      setBuyNowError(err instanceof ApiError ? err.message : "주문 생성에 실패했습니다.");
+    }
+  };
+
   if (error) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
@@ -299,7 +330,22 @@ function ProductDetail({ productNo }: { productNo: number }) {
       )}
       {addStatus === "error" && <p className="text-sm text-red-500 mt-3">{addError}</p>}
 
-      {showBuyNow && (
+      {showBuyNow && buyNowStatus === "success" && (
+        <div className="mt-4 rounded-xl border border-gray-100 p-4 text-center">
+          <p className="text-sm font-semibold text-gray-900 mb-2">주문이 완료되었습니다</p>
+          {accessToken ? (
+            <Link href="/orders" className="text-sm text-gray-900 hover:underline">
+              주문내역 보기
+            </Link>
+          ) : (
+            <Link href="/orders/guest" className="text-sm text-gray-900 hover:underline">
+              주문 조회하기
+            </Link>
+          )}
+        </div>
+      )}
+
+      {showBuyNow && buyNowStatus !== "success" && (
         <div className="mt-4 rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
           <h2 className="text-sm font-semibold text-gray-500">바로구매</h2>
 
@@ -352,11 +398,15 @@ function ProductDetail({ productNo }: { productNo: number }) {
             className="w-full rounded-lg border border-gray-200 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-gray-900"
           />
 
+          {buyNowError && <p className="text-sm text-red-500">{buyNowError}</p>}
+
           <button
             type="button"
-            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors"
+            onClick={handleBuyNow}
+            disabled={buyNowStatus === "loading"}
+            className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
-            주문하기
+            {buyNowStatus === "loading" ? "주문 처리 중..." : "주문하기"}
           </button>
         </div>
       )}
