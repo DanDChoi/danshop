@@ -1,7 +1,7 @@
 "use client";
 
 import { useParams } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
@@ -16,6 +16,7 @@ import {
   updateReview,
   deleteReview,
   createOrder,
+  createGuestOrder,
   ApiError,
   type Product,
   type ProductReviews,
@@ -57,6 +58,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
     "idle"
   );
   const [buyNowError, setBuyNowError] = useState("");
+  const [buyNowOrderId, setBuyNowOrderId] = useState<number | null>(null);
 
   const [productReviews, setProductReviews] = useState<ProductReviews | null>(null);
 
@@ -209,24 +211,34 @@ function ProductDetail({ productNo }: { productNo: number }) {
     }
   };
 
-  const handleBuyNow = async () => {
+  const handleBuyNow = async (e: FormEvent) => {
+    e.preventDefault();
     if (!product) return;
-
-    if (!accessToken) {
-      // 비회원 흐름은 다음 단계에서 연결한다.
-      return;
-    }
 
     setBuyNowStatus("loading");
     setBuyNowError("");
     try {
-      await createOrder(accessToken, {
-        payAmount: product.price * quantity,
-        postNo: buyNowPostNo,
-        baseAddr: buyNowBaseAddr,
-        detailAddr: buyNowDetailAddr,
-        items: [{ productId: productNo, quantity }],
-      });
+      if (accessToken) {
+        await createOrder(accessToken, {
+          payAmount: product.price * quantity,
+          postNo: buyNowPostNo,
+          baseAddr: buyNowBaseAddr,
+          detailAddr: buyNowDetailAddr,
+          items: [{ productId: productNo, quantity }],
+        });
+      } else {
+        const response = await createGuestOrder({
+          ordererName: buyNowOrdererName,
+          ordererEmail: buyNowOrdererEmail,
+          ordererPhone: buyNowOrdererPhone,
+          payAmount: product.price * quantity,
+          postNo: buyNowPostNo,
+          baseAddr: buyNowBaseAddr,
+          detailAddr: buyNowDetailAddr,
+          items: [{ productId: productNo, quantity }],
+        });
+        setBuyNowOrderId(response.orderId);
+      }
       setBuyNowStatus("success");
     } catch (err) {
       setBuyNowStatus("error");
@@ -338,21 +350,30 @@ function ProductDetail({ productNo }: { productNo: number }) {
               주문내역 보기
             </Link>
           ) : (
-            <Link href="/orders/guest" className="text-sm text-gray-900 hover:underline">
-              주문 조회하기
-            </Link>
+            <>
+              {buyNowOrderId != null && (
+                <p className="text-sm text-gray-500 mb-2">주문번호: {buyNowOrderId}</p>
+              )}
+              <Link href="/orders/guest" className="text-sm text-gray-900 hover:underline">
+                주문 조회하기
+              </Link>
+            </>
           )}
         </div>
       )}
 
       {showBuyNow && buyNowStatus !== "success" && (
-        <div className="mt-4 rounded-xl border border-gray-100 p-4 flex flex-col gap-3">
+        <form
+          onSubmit={handleBuyNow}
+          className="mt-4 rounded-xl border border-gray-100 p-4 flex flex-col gap-3"
+        >
           <h2 className="text-sm font-semibold text-gray-500">바로구매</h2>
 
           {!accessToken && (
             <>
               <input
                 type="text"
+                required
                 placeholder="주문자 이름"
                 value={buyNowOrdererName}
                 onChange={(e) => setBuyNowOrdererName(e.target.value)}
@@ -360,6 +381,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
               />
               <input
                 type="email"
+                required
                 placeholder="이메일"
                 value={buyNowOrdererEmail}
                 onChange={(e) => setBuyNowOrdererEmail(e.target.value)}
@@ -367,6 +389,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
               />
               <input
                 type="text"
+                required
                 placeholder="연락처 (010-0000-0000)"
                 value={buyNowOrdererPhone}
                 onChange={(e) => setBuyNowOrdererPhone(e.target.value)}
@@ -378,6 +401,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
 
           <input
             type="text"
+            required
             placeholder="우편번호"
             value={buyNowPostNo}
             onChange={(e) => setBuyNowPostNo(e.target.value)}
@@ -385,6 +409,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
           />
           <input
             type="text"
+            required
             placeholder="기본 주소"
             value={buyNowBaseAddr}
             onChange={(e) => setBuyNowBaseAddr(e.target.value)}
@@ -392,6 +417,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
           />
           <input
             type="text"
+            required
             placeholder="상세 주소"
             value={buyNowDetailAddr}
             onChange={(e) => setBuyNowDetailAddr(e.target.value)}
@@ -401,14 +427,13 @@ function ProductDetail({ productNo }: { productNo: number }) {
           {buyNowError && <p className="text-sm text-red-500">{buyNowError}</p>}
 
           <button
-            type="button"
-            onClick={handleBuyNow}
+            type="submit"
             disabled={buyNowStatus === "loading"}
             className="self-start rounded-lg bg-gray-900 text-white text-sm font-medium px-4 py-2 hover:bg-gray-700 transition-colors disabled:opacity-50"
           >
             {buyNowStatus === "loading" ? "주문 처리 중..." : "주문하기"}
           </button>
-        </div>
+        </form>
       )}
 
       {accessToken && (
