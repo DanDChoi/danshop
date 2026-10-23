@@ -12,10 +12,7 @@ import {
   type PointType,
 } from "@/lib/api";
 import { useRequireAuth } from "@/lib/use-require-auth";
-
-function formatDate(iso: string): string {
-  return iso.slice(0, 10).split("-").join(".");
-}
+import { formatDate } from "@/lib/format";
 
 const POINT_TYPE_LABELS: Record<PointType, string> = {
   EARN: "적립",

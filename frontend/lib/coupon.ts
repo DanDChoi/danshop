@@ -4,10 +4,6 @@ export function formatDiscount(type: DiscountType, value: number): string {
   return type === "RATE" ? `${value}% 할인` : `${value.toLocaleString()}원 할인`;
 }
 
-export function formatCouponDate(iso: string): string {
-  return iso.slice(0, 10).split("-").join(".");
-}
-
 /** 주문 금액에 쿠폰을 적용했을 때 깎이는 금액. 백엔드 OrderService 계산식과 일치. */
 export function couponDiscount(coupon: MyCoupon, amount: number): number {
   if (amount < coupon.minOrderAmount) return 0;

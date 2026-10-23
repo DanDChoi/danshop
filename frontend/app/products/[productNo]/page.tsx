@@ -5,6 +5,7 @@ import { useEffect, useState, FormEvent } from "react";
 import Link from "next/link";
 import { useAuth } from "@/lib/auth-context";
 import { getOrCreateGuestToken } from "@/lib/guest";
+import { formatDate } from "@/lib/format";
 import {
   getProduct,
   addToCart,
@@ -22,10 +23,6 @@ import {
   type ProductReviews,
   type ReviewItem,
 } from "@/lib/api";
-
-function formatDate(iso: string): string {
-  return iso.slice(0, 10).split("-").join(".");
-}
 
 export default function ProductDetailPage() {
   const params = useParams<{ productNo: string }>();
