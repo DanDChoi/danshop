@@ -9,7 +9,8 @@ import {
   type Coupon,
   type MyCoupon,
 } from "@/lib/api";
-import { formatDiscount, formatCouponDate } from "@/lib/coupon";
+import { formatDiscount } from "@/lib/coupon";
+import { formatDate } from "@/lib/format";
 import { useRequireAuth } from "@/lib/use-require-auth";
 
 export default function CouponsPage() {
@@ -107,7 +108,7 @@ export default function CouponsPage() {
                           </p>
                           <p className="text-xs text-gray-400 mt-1">
                             {coupon.minOrderAmount.toLocaleString()}원 이상 · {coupon.remainQuantity}개 남음
-                            · ~{formatCouponDate(coupon.expiresAt)}
+                            · ~{formatDate(coupon.expiresAt)}
                           </p>
                         </div>
                         <button
@@ -150,7 +151,7 @@ export default function CouponsPage() {
                       <p className="text-xs text-gray-400 mt-1">
                         {formatDiscount(coupon.discountType, coupon.discountValue)} ·{" "}
                         {coupon.minOrderAmount.toLocaleString()}원 이상 · ~
-                        {formatCouponDate(coupon.expiresAt)}
+                        {formatDate(coupon.expiresAt)}
                       </p>
                     </div>
                     {coupon.used && (

@@ -11,7 +11,8 @@ import {
   type Coupon,
   type DiscountType,
 } from "@/lib/api";
-import { formatDiscount, formatCouponDate } from "@/lib/coupon";
+import { formatDiscount } from "@/lib/coupon";
+import { formatDate } from "@/lib/format";
 
 export default function AdminCouponsPage() {
   const isAdmin = useRequireAdmin();
@@ -201,7 +202,7 @@ export default function AdminCouponsPage() {
               </p>
               <p className="text-xs text-gray-400 mt-1">
                 {coupon.minOrderAmount.toLocaleString()}원 이상 · {coupon.remainQuantity}개 남음 ·
-                ~{formatCouponDate(coupon.expiresAt)}
+                ~{formatDate(coupon.expiresAt)}
               </p>
             </div>
           ))}
