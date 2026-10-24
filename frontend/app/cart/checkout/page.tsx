@@ -15,6 +15,7 @@ import {
   type MyCoupon,
 } from "@/lib/api";
 import { formatDiscount, couponDiscount, isCouponUsable } from "@/lib/coupon";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 function resolveIdentity(accessToken: string | null): Identity {
   return accessToken ? { token: accessToken } : { guestToken: getOrCreateGuestToken() };
@@ -118,7 +119,7 @@ export default function CheckoutPage() {
   if (!cart) {
     return (
       <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       </main>
     );
   }
@@ -349,7 +350,7 @@ export default function CheckoutPage() {
           </>
         )}
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorMessage message={error} />
 
         <button
           type="submit"

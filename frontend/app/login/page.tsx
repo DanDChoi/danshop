@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { login, ApiError } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { ErrorMessage } from "@/components/PageState";
 
 export default function LoginPage() {
   return (
@@ -86,7 +87,7 @@ function LoginForm() {
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorMessage message={error} />
 
         <button
           type="submit"

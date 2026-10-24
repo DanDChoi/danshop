@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { useRequireAuth } from "@/lib/use-require-auth";
 import { formatDate } from "@/lib/format";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 const POINT_TYPE_LABELS: Record<PointType, string> = {
   EARN: "적립",
@@ -93,7 +94,7 @@ export default function MyPage() {
   if (error) {
     return (
       <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
-        <p className="text-sm text-red-500">{error}</p>
+        <ErrorMessage message={error} />
       </main>
     );
   }
@@ -101,7 +102,7 @@ export default function MyPage() {
   if (!profile) {
     return (
       <main className="max-w-sm mx-auto px-4 py-16 md:py-24">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       </main>
     );
   }

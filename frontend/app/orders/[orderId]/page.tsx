@@ -12,6 +12,7 @@ import {
 } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
 import { useRequireAuth } from "@/lib/use-require-auth";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 export default function OrderDetailPage() {
   const params = useParams<{ orderId: string }>();
@@ -106,7 +107,7 @@ function OrderDetailView({ orderId }: { orderId: number }) {
   if (error) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-red-500 mb-4">{error}</p>
+        <ErrorMessage message={error} className="mb-4" />
         <Link href="/orders" className="text-sm font-medium text-gray-900 hover:underline">
           주문 내역으로
         </Link>
@@ -117,7 +118,7 @@ function OrderDetailView({ orderId }: { orderId: number }) {
   if (!order) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       </main>
     );
   }

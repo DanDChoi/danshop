@@ -12,6 +12,7 @@ import {
 import { formatDiscount } from "@/lib/coupon";
 import { formatDate } from "@/lib/format";
 import { useRequireAuth } from "@/lib/use-require-auth";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 export default function CouponsPage() {
   const accessToken = useRequireAuth();
@@ -84,10 +85,10 @@ export default function CouponsPage() {
     <main className="max-w-2xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-6">쿠폰함</h1>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : (
         <>
           <section className="mb-10">
