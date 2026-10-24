@@ -12,6 +12,7 @@ import {
   type Product,
 } from "@/lib/api";
 import { useAuth } from "@/lib/auth-context";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 const PAGE_SIZE = 12;
 
@@ -225,10 +226,10 @@ function ProductsList({ page, filters }: { page: number; filters: Filters }) {
         </div>
       </form>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : products.length === 0 ? (
         <p className="text-sm text-gray-400">상품이 없습니다.</p>
       ) : (

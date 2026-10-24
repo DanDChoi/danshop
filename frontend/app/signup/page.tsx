@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signup, ApiError } from "@/lib/api";
+import { ErrorMessage } from "@/components/PageState";
 
 export default function SignupPage() {
   const router = useRouter();
@@ -96,7 +97,7 @@ export default function SignupPage() {
           <p className="mt-1 text-xs text-gray-400">6자 이상</p>
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorMessage message={error} />
 
         <button
           type="submit"

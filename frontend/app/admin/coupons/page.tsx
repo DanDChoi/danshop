@@ -13,6 +13,7 @@ import {
 } from "@/lib/api";
 import { formatDiscount } from "@/lib/coupon";
 import { formatDate } from "@/lib/format";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 export default function AdminCouponsPage() {
   const isAdmin = useRequireAdmin();
@@ -186,10 +187,10 @@ export default function AdminCouponsPage() {
         </div>
       )}
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : coupons.length === 0 ? (
         <p className="text-sm text-gray-400">발급 가능한 쿠폰이 없습니다.</p>
       ) : (

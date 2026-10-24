@@ -4,6 +4,7 @@ import { useState, FormEvent } from "react";
 import Link from "next/link";
 import { lookupGuestOrder, ApiError, type OrderDetail } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
+import { ErrorMessage } from "@/components/PageState";
 
 export default function GuestOrderLookupPage() {
   const [orderId, setOrderId] = useState("");
@@ -116,7 +117,7 @@ export default function GuestOrderLookupPage() {
           />
         </div>
 
-        {error && <p className="text-sm text-red-500">{error}</p>}
+        <ErrorMessage message={error} />
 
         <button
           type="submit"

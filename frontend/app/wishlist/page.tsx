@@ -11,6 +11,7 @@ import {
   type WishlistItem,
 } from "@/lib/api";
 import { useRequireAuth } from "@/lib/use-require-auth";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 export default function WishlistPage() {
   const accessToken = useRequireAuth();
@@ -115,12 +116,12 @@ export default function WishlistPage() {
         )}
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
       {actionError && <p className="text-sm text-red-500 mb-4">{actionError}</p>}
       {notice && <p className="text-sm text-green-600 mb-4">{notice}</p>}
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : items.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm text-gray-400 mb-4">위시리스트가 비어있습니다.</p>

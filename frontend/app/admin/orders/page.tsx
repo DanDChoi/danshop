@@ -12,6 +12,7 @@ import {
   type OrderSummary,
 } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 const PAGE_SIZE = 20;
 
@@ -112,11 +113,11 @@ export default function AdminOrdersPage() {
         </select>
       </div>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
       {statusError && <p className="text-sm text-red-500 mb-4">{statusError}</p>}
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : orders.length === 0 ? (
         <p className="text-sm text-gray-400">주문이 없습니다.</p>
       ) : (

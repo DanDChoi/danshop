@@ -23,6 +23,7 @@ import {
   type ProductReviews,
   type ReviewItem,
 } from "@/lib/api";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 export default function ProductDetailPage() {
   const params = useParams<{ productNo: string }>();
@@ -246,7 +247,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
   if (error) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-red-500">{error}</p>
+        <ErrorMessage message={error} />
       </main>
     );
   }
@@ -254,7 +255,7 @@ function ProductDetail({ productNo }: { productNo: number }) {
   if (!product) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       </main>
     );
   }

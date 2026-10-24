@@ -14,6 +14,7 @@ import {
   type OrderStatusStat,
 } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 function toFromDateTime(date: string): string {
   return `${date}T00:00:00`;
@@ -169,10 +170,10 @@ export default function AdminStatsPage() {
           </button>
         </form>
 
-        {salesError && <p className="text-sm text-red-500">{salesError}</p>}
+        <ErrorMessage message={salesError} />
 
         {salesLoading ? (
-          <p className="text-sm text-gray-400">불러오는 중...</p>
+          <Loading />
         ) : (
           salesStat && (
             <div className="flex gap-4">
@@ -196,10 +197,10 @@ export default function AdminStatsPage() {
       <section className="mb-8">
         <h2 className="text-sm font-semibold text-gray-500 mb-3">인기 상품</h2>
 
-        {topProductsError && <p className="text-sm text-red-500">{topProductsError}</p>}
+        <ErrorMessage message={topProductsError} />
 
         {topProductsLoading ? (
-          <p className="text-sm text-gray-400">불러오는 중...</p>
+          <Loading />
         ) : topProducts.length === 0 ? (
           <p className="text-sm text-gray-400">판매 데이터가 없습니다.</p>
         ) : (
@@ -228,10 +229,10 @@ export default function AdminStatsPage() {
       <section>
         <h2 className="text-sm font-semibold text-gray-500 mb-3">주문 상태</h2>
 
-        {orderStatusError && <p className="text-sm text-red-500">{orderStatusError}</p>}
+        <ErrorMessage message={orderStatusError} />
 
         {orderStatusLoading ? (
-          <p className="text-sm text-gray-400">불러오는 중...</p>
+          <Loading />
         ) : orderStatusStat.length === 0 ? (
           <p className="text-sm text-gray-400">주문 데이터가 없습니다.</p>
         ) : (

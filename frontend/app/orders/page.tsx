@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { getOrders, ApiError, type OrderSummary } from "@/lib/api";
 import { ORDER_STATUS_LABELS } from "@/lib/order";
 import { useRequireAuth } from "@/lib/use-require-auth";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 const PAGE_SIZE = 10;
 
@@ -69,10 +70,10 @@ function OrdersList({ page }: { page: number }) {
     <main className="max-w-2xl mx-auto px-4 md:px-6 py-12 md:py-16">
       <h1 className="text-3xl font-extrabold text-gray-900 tracking-tight mb-6">주문 내역</h1>
 
-      {error && <p className="text-sm text-red-500 mb-4">{error}</p>}
+      <ErrorMessage message={error} className="mb-4" />
 
       {isLoading ? (
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       ) : orders.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-sm text-gray-400 mb-4">주문 내역이 없습니다.</p>

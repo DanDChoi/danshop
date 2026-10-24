@@ -13,6 +13,7 @@ import {
   type Cart,
   type Identity,
 } from "@/lib/api";
+import { Loading, ErrorMessage } from "@/components/PageState";
 
 function resolveIdentity(accessToken: string | null): Identity {
   return accessToken ? { token: accessToken } : { guestToken: getOrCreateGuestToken() };
@@ -84,7 +85,7 @@ export default function CartPage() {
   if (error) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-red-500">{error}</p>
+        <ErrorMessage message={error} />
       </main>
     );
   }
@@ -92,7 +93,7 @@ export default function CartPage() {
   if (!cart) {
     return (
       <main className="max-w-2xl mx-auto px-4 md:px-6 py-16">
-        <p className="text-sm text-gray-400">불러오는 중...</p>
+        <Loading />
       </main>
     );
   }
